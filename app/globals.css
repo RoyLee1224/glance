@@ -195,6 +195,9 @@ h1 { font-size:30px; letter-spacing:1px; font-weight:650; line-height:1.3; margi
 .mobile-event-sheet .duration-note { margin-bottom:18px; }.mobile-event-sheet .event-secondary-actions { margin-top:18px; }
 body:has(.mobile-event-sheet) [data-slot=sheet-overlay] { backdrop-filter:none; -webkit-backdrop-filter:none; background:#18253b1a; }
 .project-file-menu { min-width:220px; }.project-file-menu [data-slot=dropdown-menu-item] { min-height:44px; padding:10px 12px; font-size:14px; }
+[data-slot=toast-viewport] { bottom:max(16px,env(safe-area-inset-bottom)); }
+[data-slot=toast-title],[data-slot=toast-description] { font-size:14px; overflow-wrap:anywhere; }
+[data-slot=toast-close] { min-width:44px; min-height:44px; }
 @media(max-width:767px) {
   .workspace { padding:18px 12px max(24px,env(safe-area-inset-bottom)); }
   .page-heading { margin-bottom:18px; gap:14px; }.eyebrow { display:none; }h1 { font-size:24px; }.page-description { font-size:14px; line-height:1.6; margin-top:6px; }

@@ -20,6 +20,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { toast } from '@/components/ui/toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { editorGrid, previewSchedule } from '@/lib/schedule-preview';
 
@@ -79,14 +80,16 @@ export function ScheduleEditor() {
       localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify(next));
       setSaveState('已儲存在此裝置');
       setStorageError('');
+      return true;
     } catch {
       setSaveState('尚未儲存');
       setStorageError('瀏覽器無法儲存變更。請先匯出 JSON 備份，再關閉或重新整理頁面。');
+      return false;
     }
   }, []);
   const commitProject = useCallback((next: ProjectDocument) => {
     history.current = [...history.current.slice(-49), projectRef.current];
-    persist(next);
+    return persist(next);
   }, [persist]);
   const commit = useCallback((next: ScheduleEvent[]) => commitProject({ ...projectRef.current, events: next }), [commitProject]);
   const saveEvent = useCallback((event: ScheduleEvent) => {
@@ -94,8 +97,8 @@ export function ScheduleEditor() {
     if (error) throw new Error(error);
     const normalized: ScheduleEvent = { id: event.id, title: event.title.trim(), day: event.day, start: event.start, end: event.end, category: event.category };
     const current = projectRef.current.events;
-    commit(current.some(e => e.id === event.id) ? current.map(e => e.id === event.id ? normalized : e) : [...current, normalized]);
-    return normalized;
+    const persisted = commit(current.some(e => e.id === event.id) ? current.map(e => e.id === event.id ? normalized : e) : [...current, normalized]);
+    return { event: normalized, persisted };
   }, [commit]);
   useEffect(() => {
     if (!ready) return;
@@ -235,7 +238,7 @@ export function ScheduleEditor() {
     cancelGesture();
     if (active.type === 'create') openEditor(active.preview, true);
     else if (active.moved) {
-      const saved = saveEvent(active.preview);
+      const saved = saveEvent(active.preview).event;
       openEditor(saved, false, false);
     } else openEditor(active.source);
   }
@@ -247,8 +250,11 @@ export function ScheduleEditor() {
 
   const eventForm = draft && <EventForm key={draft.revision} categories={categories} scheduleGrid={scheduleGrid} event={draft.event} isNew={draft.isNew} events={events} autoFocus={!isMobile} onChange={updateDraft} onSave={event => {
     const saved = saveEvent(event);
-    if (isMobile) { setDraft(null); setSelectedId(saved.id); }
-    else openEditor(saved, false, false);
+    closeEditor();
+    if (!isMobile) grid.current?.focus({ preventScroll: true });
+    toast.add(saved.persisted
+      ? { title: draft.isNew ? '已加入週表' : '已儲存變更', description: saved.event.title, type: 'success', timeout: 3500 }
+      : { title: '變更已套用，但尚未儲存到裝置', description: '請匯出 JSON 備份，避免關閉頁面後遺失。', type: 'warning', timeout: 8000 });
   }} onCancel={closeEditor} onDuplicate={event => openEditor({ ...event, id: crypto.randomUUID() }, true)} onDelete={() => { commit(events.filter(event => event.id !== draft.event.id)); closeEditor(); }}/>
 
   return <div className="app-shell" style={{ '--hour-height': `${project.layout.hourHeight}px`, '--day-width': `${project.layout.dayWidth}px`, '--event-font-size': `${project.layout.fontSize}px`, '--day-count': displayGrid.days.length, '--grid-height': `${gridHeight}px` } as CSSProperties}>
