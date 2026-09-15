@@ -5,10 +5,10 @@ export type ScheduleCategory = { id: string; label: string; color: string };
 export type GridSettings = { days: number[]; start: number; end: number };
 export const DEFAULT_GRID: GridSettings = { days: [0, 1, 2, 3, 4], start: START, end: END };
 export const CATEGORIES: ScheduleCategory[] = [
-  { id: 'course', label: '課程', color: '#8662d9' },
-  { id: 'development', label: '開源 / 開發', color: '#4387d5' },
-  { id: 'client', label: '接案 / 網頁', color: '#cf9027' },
-  { id: 'project', label: '專案', color: '#788495' },
+  { id: 'course', label: '學習', color: '#8662d9' },
+  { id: 'development', label: '工作', color: '#4387d5' },
+  { id: 'client', label: '會議', color: '#cf9027' },
+  { id: 'project', label: '個人安排', color: '#788495' },
   { id: 'leisure', label: '休閒', color: '#5a9b64' },
 ];
 export type Category = string;
@@ -88,24 +88,16 @@ export function gridTicks(grid: GridSettings) {
   }
   return [...ticks, grid.end];
 }
+// Fictional starter content only. Never publish a user's schedule as a default.
 export const SAMPLE_EVENTS: ScheduleEvent[] = [
-  ['0', 'Airflow', 0, '09:00', '11:00', 'development'],
-  ['1', '學堂網頁', 0, '11:00', '12:00', 'client'],
-  ['2', 'FA 作業', 0, '14:00', '17:00', 'course'],
-  ['3', 'FA 課', 0, '18:00', '21:00', 'course'],
-  ['4', 'Airflow', 1, '09:00', '10:00', 'development'],
-  ['5', 'Algo 課', 1, '10:15', '12:15', 'course'],
-  ['6', '網球', 1, '15:00', '17:00', 'leisure'],
-  ['7', '診所網頁', 1, '18:00', '20:00', 'client'],
-  ['8', 'Pigpen', 1, '20:00', '21:00', 'project'],
-  ['9', 'Airflow', 2, '09:00', '11:00', 'development'],
-  ['10', '學堂網頁', 2, '14:00', '16:00', 'client'],
-  ['11', 'Pigpen', 2, '16:00', '17:00', 'project'],
-  ['12', 'DS&AI 課', 2, '19:00', '21:00', 'course'],
-  ['13', '診所 Sync', 3, '09:00', '10:00', 'client'],
-  ['14', 'FA 討論課', 3, '11:15', '12:15', 'course'],
-  ['15', 'Switch Party', 3, '14:00', '17:00', 'leisure'],
-  ['16', 'Airflow', 4, '09:00', '11:00', 'development'],
-  ['17', '學堂網頁', 4, '18:00', '20:00', 'client'],
-  ['18', 'Pigpen', 4, '20:00', '21:00', 'project'],
+  ['0', '本週規劃', 0, '09:00', '10:00', 'development'],
+  ['1', '閱讀', 0, '19:30', '20:30', 'course'],
+  ['2', '語言練習', 1, '10:15', '11:00', 'course'],
+  ['3', '運動', 1, '17:30', '18:30', 'leisure'],
+  ['4', '專注工作', 2, '10:00', '12:00', 'development'],
+  ['5', '每週會議', 2, '14:00', '15:00', 'client'],
+  ['6', '整理筆記', 3, '09:30', '10:30', 'project'],
+  ['7', '散步', 3, '18:00', '18:30', 'leisure'],
+  ['8', '進度回顧', 4, '14:30', '15:30', 'client'],
+  ['9', '下週規劃', 4, '16:00', '16:30', 'project'],
 ].map(([id, title, day, start, end, category]) => ({ id: `sample-${id}`, title: String(title), day: Number(day), start: parseTime(String(start)), end: parseTime(String(end)), category: category as Category }));

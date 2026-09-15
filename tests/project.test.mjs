@@ -5,6 +5,7 @@ import { SAMPLE_EVENTS } from '../lib/schedule.ts';
 
 test('JSON round-trip preserves schedule and every layout setting', () => {
   const project = createProject();
+  project.events[0].title = '我的自訂行程';
   project.layout = { hourHeight: 96, dayWidth: 180, fontSize: 18 };
   const restored = decodeProject(encodeProject(project));
   assert.deepEqual(restored, project);
@@ -28,7 +29,7 @@ test('empty schedules are valid backups and defaults are not shared mutable obje
   a.layout.fontSize = 20;
   a.events[0].title = '已修改';
   assert.equal(b.layout.fontSize, 14);
-  assert.equal(b.events[0].title, 'Airflow');
+  assert.equal(b.events[0].title, '本週規劃');
 });
 
 test('incompatible or malformed projects are rejected without mutating current data', () => {

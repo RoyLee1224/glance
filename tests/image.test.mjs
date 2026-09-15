@@ -8,7 +8,7 @@ test('image includes the full configured week with category colors and no viewpo
   const project = createProject();
   const before = JSON.stringify(project);
   const image = scheduleImageLayout(project);
-  assert.equal(image.cards.length, 19);
+  assert.equal(image.cards.length, project.events.length);
   assert.equal(image.gridWidth, 5 * project.layout.dayWidth);
   assert.equal(image.gridHeight, 12 * project.layout.hourHeight);
   assert.equal(image.pixelWidth, image.width * 2);
@@ -17,10 +17,10 @@ test('image includes the full configured week with category colors and no viewpo
   assert.equal(image.ticks.at(-1).label, '21:00');
   assert.equal(image.lines.length, 23);
   assert.equal(image.lines.filter(line => line.hour).length, 11);
-  const airflow = image.cards.find(card => card.event.id === 'sample-0');
-  assert.equal(airflow.y, image.gridY);
-  assert.equal(airflow.height, 2 * project.layout.hourHeight - 3);
-  assert.deepEqual(airflow.colors, eventColors('#4387d5'));
+  const planning = image.cards.find(card => card.event.id === 'sample-0');
+  assert.equal(planning.y, image.gridY);
+  assert.equal(planning.height, project.layout.hourHeight - 3);
+  assert.deepEqual(planning.colors, eventColors('#4387d5'));
   assert.equal(JSON.stringify(project), before);
 });
 
@@ -70,9 +70,9 @@ test('largest supported layout stays within image memory and dimension limits', 
 test('image text wraps words and Chinese, keeps emoji intact and truncates within its box', () => {
   const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
   const measure = text => [...segmenter.segment(text)].length;
-  assert.deepEqual(fitTextLines('Switch Party', 6, 2, measure), ['Switch', 'Party']);
-  assert.deepEqual(fitTextLines('學堂網頁開發', 3, 2, measure), ['學堂網', '頁開發']);
-  assert.deepEqual(fitTextLines('學堂網頁開發', 3, 1, measure), ['學堂…']);
+  assert.deepEqual(fitTextLines('Weekly Review', 6, 2, measure), ['Weekly', 'Review']);
+  assert.deepEqual(fitTextLines('閱讀學習計畫', 3, 2, measure), ['閱讀學', '習計畫']);
+  assert.deepEqual(fitTextLines('閱讀學習計畫', 3, 1, measure), ['閱讀…']);
   assert.deepEqual(fitTextLines('🧑‍💻👨‍👩‍👧‍👦🏸', 2, 2, measure), ['🧑‍💻👨‍👩‍👧‍👦', '🏸']);
   assert.deepEqual(fitTextLines('text', 0.5, 1, measure), []);
 });

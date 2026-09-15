@@ -5,11 +5,11 @@ import { createScheduleTools } from '../lib/schedule-tools.ts';
 
 const make = (id, start, end, day = 0) => ({ id, title: '行程', start, end, day, category: 'course' });
 
-test('reference schedule preserves quarter-hour lessons, Thursday party, and 34 hours', () => {
-  assert.equal(SAMPLE_EVENTS.length, 19);
-  assert.equal(SAMPLE_EVENTS.reduce((sum, e) => sum + e.end - e.start, 0), 34 * 60);
-  assert.equal(SAMPLE_EVENTS.find(e => e.title === 'Switch Party').day, 3);
-  assert.equal(SAMPLE_EVENTS.find(e => e.title === 'Algo 課').start, 615);
+test('fictional starter schedule contains valid, distinct events across the default week', () => {
+  assert.equal(SAMPLE_EVENTS.length, 10);
+  assert.equal(new Set(SAMPLE_EVENTS.map(event => event.id)).size, SAMPLE_EVENTS.length);
+  assert.deepEqual([...new Set(SAMPLE_EVENTS.map(event => event.day))], [0, 1, 2, 3, 4]);
+  assert.ok(SAMPLE_EVENTS.every(event => event.start >= START && event.end <= END));
   SAMPLE_EVENTS.forEach(event => assert.equal(validateEvent(event), null));
 });
 

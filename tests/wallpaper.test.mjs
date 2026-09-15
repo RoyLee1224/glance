@@ -53,7 +53,7 @@ test('preview and original-resolution export have the same normalized placement 
   const exported = wallpaperGeometry(project, 1200, 2640);
   for (const key of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(exported.panel[key] - preview.panel[key] * 3) < 0.00001);
   assert.ok(Math.abs(exported.scale - preview.scale * 3) < 0.00001);
-  assert.equal(exported.image.cards.length, 19);
+  assert.equal(exported.image.cards.length, project.events.length);
   exported.image.cards.forEach((card, index) => {
     const expected = preview.image.cards[index];
     assert.deepEqual(card.event, expected.event);

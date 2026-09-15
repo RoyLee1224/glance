@@ -21,9 +21,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 function loadInitialSchedule() {
   try {
     const raw = localStorage.getItem(PROJECT_STORAGE_KEY) ?? localStorage.getItem(LEGACY_PROJECT_STORAGE_KEY) ?? localStorage.getItem(OLDER_PROJECT_STORAGE_KEY) ?? localStorage.getItem(STORAGE_KEY);
-    return { project: raw === null ? createProject() : decodeProject(raw), error: '' };
+    return { project: raw === null ? createProject() : decodeProject(raw), isExample: raw === null, error: '' };
   } catch {
-    return { project: createProject(), error: '無法讀取儲存的行程，暫時顯示範例。原資料尚未覆寫；下次修改將儲存目前的週表。' };
+    return { project: createProject(), isExample: true, error: '無法讀取儲存的行程，暫時顯示範例。原資料尚未覆寫；下次修改將儲存目前的週表。' };
   }
 }
 type Draft = { event: ScheduleEvent; isNew: boolean; revision: number };
@@ -43,7 +43,7 @@ export function ScheduleEditor() {
   const projectRef = useRef(project);
   const history = useRef<ProjectDocument[]>([]);
   const ready = true;
-  const [saveState, setSaveState] = useState(initial.error ? '無法讀取儲存資料' : '已儲存在此裝置');
+  const [saveState, setSaveState] = useState(initial.error ? '無法讀取儲存資料' : initial.isExample ? '範例週表 · 可直接編輯' : '已儲存在此裝置');
   const [storageError, setStorageError] = useState(initial.error);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -323,7 +323,7 @@ function EventForm({ event, isNew, events, categories, scheduleGrid, onSave, onC
   const duration = value.end - value.start;
   return <form className="event-form" onSubmit={e => { e.preventDefault(); const message = validateEvent(value, categories); if (message) { setError(message); return; } onSave(value); setSaved(true); setError(''); }} onChange={() => { setError(''); setSaved(false); }}>
     <label className="form-label" htmlFor="event-title">行程名稱</label>
-    <Input className="form-input" id="event-title" ref={titleInput} maxLength={60} required value={title} onChange={e => setTitle(e.target.value)} placeholder="例如：Airflow" aria-describedby={error ? 'form-error' : undefined}/>
+    <Input className="form-input" id="event-title" ref={titleInput} maxLength={60} required value={title} onChange={e => setTitle(e.target.value)} placeholder="例如：閱讀、運動、每週會議" aria-describedby={error ? 'form-error' : undefined}/>
     <span className="form-label" id="event-day-label">星期</span>
     <Select value={day} onValueChange={value => { if (value !== null) setDay(Number(value)); }}><SelectTrigger className="form-select" aria-labelledby="event-day-label"><SelectValue>{DAYS[day]}</SelectValue></SelectTrigger><SelectContent>{DAYS.map((name, index) => <SelectItem key={name} value={index}>{name}</SelectItem>)}</SelectContent></Select>
     <div className="time-inputs"><div><span className="form-label" id="event-start-label">開始</span><TimeSelect labelId="event-start-label" value={start} onChange={setStart}/></div><span>—</span><div><span className="form-label" id="event-end-label">結束</span><TimeSelect labelId="event-end-label" value={end} onChange={setEnd} end/></div></div>

@@ -11,12 +11,12 @@ A local-first weekly schedule editor that composes a timetable over an unchanged
 - Create, edit, move, resize, duplicate, and delete events.
 - Undo with ⌘Z / Ctrl+Z, without a toolbar button. Editable text keeps native undo; project undo waits until dialogs and drag gestures are finished.
 - Move events by dragging the card body. Resize with the dedicated bottom-center grip, visible on hover or selection, with an enlarged hit area and a vertical-resize cursor.
-- User-defined category names and colors, with add/remove and event reassignment. Initial colors: purple courses, blue development, orange clients, gray projects, green leisure. Weekly allocation calculates hours from actual events.
+- User-defined category names and colors, with add/remove and event reassignment. Initial colors: purple learning, blue work, orange meetings, gray personal plans, green leisure. Weekly allocation calculates hours from actual events.
 - Event text follows its category hue, with opaque pastel backgrounds. Show hourly grid lines and subtle half-hour lines; do not draw quarter-hour lines or show grid lines through event cards. Keep 15-minute editing precision.
 - Save on this device using localStorage; no accounts, backend, or calendar integration.
 - Export/import JSON v4 containing events, categories, displayed weekdays/time range, grid layout and glass wallpaper settings. Support v1–v3 migration. Import validates before replacing and can be undone; the selected photo remains separate. No schedule uploads or app-owned database.
 - Export a white-background PNG of the entire configured grid using committed data. Retain category colors, weekday/time labels, grid lines, clipping, and layout settings; exclude editing controls and selection/resize decorations. Export locally, normally at 2× with size limits for large layouts.
-- Load the example schedule from the supplied conversation on first use. Switch Party belongs to Thursday per the written specification; the reference screenshot places it on Friday.
+- First-time visitors see a fictional, generic example labeled as a sample. Never include user-provided schedules in public starter data. Updates to defaults must preserve existing locally saved projects.
 
 ## References
 
