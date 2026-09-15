@@ -17,7 +17,7 @@ test('moving snaps to 15 minutes, keeps duration and clamps to the week', () => 
   const event = make('a', 600, 720);
   assert.deepEqual(moveEvent(event, 2, 23), { ...event, day: 2, start: 630, end: 750 });
   assert.deepEqual(moveEvent(event, -3, -1000), { ...event, day: 0, start: START, end: START + 120 });
-  assert.deepEqual(moveEvent(event, 9, 1000), { ...event, day: 4, start: END - 120, end: END });
+  assert.deepEqual(moveEvent(event, 9, 1000), { ...event, day: 6, start: END - 120, end: END });
 });
 
 test('resizing cannot invert an event or pass 21:00', () => {
