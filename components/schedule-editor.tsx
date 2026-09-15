@@ -11,17 +11,26 @@ import { CATEGORIES, DAYS, DAY_CODES, START, END, STEP, SAMPLE_EVENTS, STORAGE_K
 import { registerScheduleTools } from '@/lib/schedule-tools';
 
 const makeEvent = (day = 0, start = START, end = Math.min(start + 60, END)): ScheduleEvent => ({ id: crypto.randomUUID(), title: '', day, start, end, category: 'development' });
+function loadInitialSchedule() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return { events: raw === null ? SAMPLE_EVENTS : decodeSchedule(raw), error: '' };
+  } catch {
+    return { events: SAMPLE_EVENTS, error: '無法讀取儲存的行程，暫時顯示範例。原資料尚未覆寫；下次修改將儲存目前的週表。' };
+  }
+}
 type Draft = { event: ScheduleEvent; isNew: boolean; revision: number };
 type Gesture = { type: 'create' | 'move' | 'resize'; source: ScheduleEvent; initialX: number; initialY: number; initialMinute: number; moved: boolean; preview: ScheduleEvent; pointerId: number };
 
 export function ScheduleEditor() {
-  const [events, setEvents] = useState<ScheduleEvent[]>(SAMPLE_EVENTS);
+  const [initial] = useState(loadInitialSchedule);
+  const [events, setEvents] = useState<ScheduleEvent[]>(initial.events);
   const eventsRef = useRef(events);
   const history = useRef<ScheduleEvent[][]>([]);
   const [canUndo, setCanUndo] = useState(false);
-  const [ready, setReady] = useState(false);
-  const [saveState, setSaveState] = useState('讀取行程中…');
-  const [storageError, setStorageError] = useState('');
+  const ready = true;
+  const [saveState, setSaveState] = useState(initial.error ? '無法讀取儲存資料' : '已儲存在此裝置');
+  const [storageError, setStorageError] = useState(initial.error);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragPreview, setDragPreview] = useState<ScheduleEvent | null>(null);
@@ -30,22 +39,6 @@ export function ScheduleEditor() {
   const inspector = useRef<HTMLElement>(null);
   const revision = useRef(0);
   const suppressClick = useRef(false);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved !== null) {
-        const restored = decodeSchedule(saved);
-        eventsRef.current = restored;
-        setEvents(restored);
-      }
-      setSaveState('已儲存在此裝置');
-    } catch {
-      setStorageError('無法讀取儲存的行程，暫時顯示範例。原資料尚未覆寫；下次修改將儲存目前的週表。');
-      setSaveState('無法讀取儲存資料');
-    }
-    setReady(true);
-  }, []);
 
   const persist = useCallback((next: ScheduleEvent[]) => {
     eventsRef.current = next;
@@ -156,7 +149,7 @@ export function ScheduleEditor() {
   return <div className="app-shell">
     <header className="app-header">
       <a href="/" className="brand"><span className="brand-icon"><CalendarDays size={20} /></span><span>glance</span><span className="brand-divider" /><small className="brand-label">週行程編輯器</small></a>
-      <span className={`save-state ${storageError ? 'has-error' : ''}`} role="status">{storageError ? <AlertCircle size={14} /> : <Check size={14} />}{saveState}</span>
+      <output className={`save-state ${storageError ? 'has-error' : ''}`}>{storageError ? <AlertCircle size={14} /> : <Check size={14} />}{saveState}</output>
     </header>
     <main className="workspace">
       <section className="page-heading"><div><p className="eyebrow">YOUR WEEK, AT A GLANCE</p><h1>每週行程</h1><p className="page-description">在空白時段拖曳，開始安排一週。</p></div><Button className="primary-button" disabled={!ready} onClick={() => openEditor(makeEvent(), true)}><Plus />新增行程</Button></section>
@@ -164,17 +157,19 @@ export function ScheduleEditor() {
       <div className="editor-layout">
         <section className="schedule-card" aria-label="每週行程表">
           <div className="grid-toolbar"><span><strong>週一 — 週五</strong><span className="toolbar-divider">/</span>09:00–21:00</span><div className="grid-tools"><span>15 分鐘一格</span><Button variant="ghost" size="icon" disabled={!canUndo} onClick={undo} title="復原上一步" aria-label="復原上一步"><Undo2 /></Button></div></div>
-          <div className="grid-scroll" aria-label="週表，可左右捲動" tabIndex={0}>
+          <div className="grid-scroll">
             <div className="week-grid">
               <div className="day-headers"><div className="timezone-label">時間</div>{DAYS.map((day, i) => <div className="day-header" key={day}><span>{DAY_CODES[i]}</span><strong>{day}</strong></div>)}</div>
               <div className="grid-body">
                 <div className="time-rail" aria-hidden="true">{Array.from({ length: 13 }, (_, i) => <span key={i} style={{ top: `${i / 12 * 100}%` }}>{timeLabel(START + i * 60)}</span>)}</div>
                 <div className={`day-columns ${dragPreview ? 'is-dragging' : ''}`} ref={grid} onPointerMove={movePointer} onPointerUp={endPointer} onPointerCancel={cancelGesture} onLostPointerCapture={() => { if (gesture.current) cancelGesture(); }}>
-                  {DAYS.map((day, i) => <div className="day-column" key={day} aria-label={day} onPointerDown={event => beginGesture(event)} onClick={event => {
-                    if (suppressClick.current || event.target !== event.currentTarget || !ready) return;
+                  {DAYS.map((day, i) => <div className="day-column" key={day}>
+                    <button className="empty-day" aria-label={`在${day}新增行程`} onPointerDown={event => beginGesture(event)} onClick={event => {
+                    if (suppressClick.current || !ready) return;
+                    if (event.detail === 0) { openEditor(makeEvent(i), true); return; }
                     const point = coordinates(event.clientX, event.clientY);
                     openEditor(makeEvent(point.day, Math.min(point.minute, END - STEP)), true);
-                  }}>
+                  }} />
                     {layoutDay(displayedEvents, i).map(item => {
                       const compact = item.end - item.start < 45;
                       const style: CSSProperties = { top: `${(item.start - START) / (END - START) * 100}%`, height: `calc(${(item.end - item.start) / (END - START) * 100}% - 3px)`, left: `calc(${item.lane / item.lanes * 100}% + 5px)`, width: `calc(${100 / item.lanes}% - 10px)` };
@@ -219,15 +214,15 @@ function EventForm({ event, isNew, events, onSave, onCancel, onDuplicate, onDele
   return <form className="event-form" onSubmit={e => { e.preventDefault(); const message = validateEvent(value); if (message) { setError(message); return; } onSave(value); setSaved(true); setError(''); }} onChange={() => { setError(''); setSaved(false); }}>
     <label className="form-label" htmlFor="event-title">行程名稱</label>
     <Input className="form-input" id="event-title" ref={titleInput} maxLength={60} required value={title} onChange={e => setTitle(e.target.value)} placeholder="例如：Airflow" aria-describedby={error ? 'form-error' : undefined}/>
-    <label className="form-label" id="event-day-label">星期</label>
+    <span className="form-label" id="event-day-label">星期</span>
     <Select value={day} onValueChange={value => { if (value !== null) setDay(Number(value)); }}><SelectTrigger className="form-select" aria-labelledby="event-day-label"><SelectValue>{DAYS[day]}</SelectValue></SelectTrigger><SelectContent>{DAYS.map((name, index) => <SelectItem key={name} value={index}>{name}</SelectItem>)}</SelectContent></Select>
     <div className="time-inputs"><div><label className="form-label" htmlFor="event-start">開始</label><Input className="form-input" type="time" id="event-start" value={start} onChange={e => setStart(e.target.value)} min="09:00" max="20:45" step={900} required/></div><span>—</span><div><label className="form-label" htmlFor="event-end">結束</label><Input className="form-input" type="time" id="event-end" value={end} onChange={e => setEnd(e.target.value)} min="09:15" max="21:00" step={900} required/></div></div>
     <p className="duration-note">{Number.isFinite(duration) && duration > 0 ? `${hoursLabel(duration)} 小時` : '請設定有效的起訖時間'} · 15 分鐘為單位</p>
-    <label className="form-label" id="category-label">分類</label>
+    <span className="form-label" id="category-label">分類</span>
     <RadioGroup className="category-options" value={category} onValueChange={value => setCategory(value as Category)} aria-labelledby="category-label">{CATEGORIES.map(c => <label key={c.id} className={`category-option ${category === c.id ? 'chosen' : ''}`}><RadioGroupItem value={c.id} style={{ '--primary': c.color } as CSSProperties}/><span>{c.label}</span><i style={{ background: c.color }}/></label>)}</RadioGroup>
     {conflicts.length > 0 && <p className="conflict-note"><AlertCircle size={14}/><span>與「{conflicts.map(e => e.title).join('、')}」重疊，儲存後會並排顯示。</span></p>}
     {error && <p className="form-error" role="alert" id="form-error">{error}</p>}
-    {saved && <p className="form-success" role="status">行程已更新</p>}
+    {saved && <output className="form-success">行程已更新</output>}
     <div className="form-actions"><Button type="submit" className="primary-button">{isNew ? '加入週表' : '儲存變更'}</Button><Button type="button" variant="ghost" onClick={onCancel}>取消</Button></div>
     {!isNew && <div className="event-secondary-actions"><Button type="button" variant="ghost" onClick={() => { const issue = validateEvent(value); if (issue) { setError(issue); return; } onDuplicate(value); }}><Copy/>複製</Button><Button type="button" variant="ghost" className="delete-button" onClick={onDelete}><Trash2/>刪除</Button></div>}
   </form>;
