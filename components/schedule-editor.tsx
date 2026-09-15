@@ -228,7 +228,7 @@ export function ScheduleEditor() {
 
   return <div className="app-shell" style={{ '--hour-height': `${project.layout.hourHeight}px`, '--day-width': `${project.layout.dayWidth}px`, '--event-font-size': `${project.layout.fontSize}px`, '--day-count': scheduleGrid.days.length, '--grid-height': `${gridHeight}px` } as CSSProperties}>
     <header className="app-header">
-      <a href="/" className="brand"><span className="brand-icon"><CalendarDays size={20} /></span><span>glance</span><span className="brand-divider" /><small className="brand-label">週行程編輯器</small></a>
+      <a href={import.meta.env.BASE_URL} className="brand"><span className="brand-icon"><CalendarDays size={20} /></span><span>glance</span><span className="brand-divider" /><small className="brand-label">週行程編輯器</small></a>
       <output className={`save-state ${storageError ? 'has-error' : ''}`}>{storageError ? <AlertCircle size={14} /> : <Check size={14} />}{saveState}</output>
     </header>
     <main className="workspace">

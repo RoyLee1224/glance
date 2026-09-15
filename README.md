@@ -2,6 +2,8 @@
 
 Local-first weekly timetable editor. React + TypeScript + Vite, static output, no application backend.
 
+Website: [Glance](https://roylee1224.github.io/glance/) · [Deployment status](https://github.com/RoyLee1224/glance/actions/workflows/deploy.yml)
+
 ## Development
 
 Requires Node 22.13+.
@@ -44,7 +46,23 @@ Preview and export share `WallpaperRenderer` in `lib/wallpaper-image.ts`, includ
 
 The original file is stored locally in IndexedDB (`glance.photos`), separately from project JSON. Select the same photo again when transferring a JSON backup to another device. Photo replacement/removal is outside project undo history. File signatures are checked; inputs are limited to 20 MiB, 16 million pixels and an 8,192-pixel longest side. Browser storage or rendering failures are reported without discarding the schedule. Use an original photo without the clock, status bar or buttons baked into a screenshot.
 
-## Deploy to Cloudflare Pages
+## Deploy to GitHub Pages
+
+The repository root contains `package.json` and the app. GitHub Actions in `.github/workflows/deploy.yml` installs dependencies, runs tests, builds the site and publishes `dist/` on every push to `main`. The repository's **Settings → Pages → Source** must be **GitHub Actions**.
+
+The workflow uses the Pages URL's base path, so assets and the home link work at `/glance/` and also with a future custom domain. A standard `npm run build` still targets `/` for other hosts. To verify the project URL build locally, run `npm run build -- --base /glance/`.
+
+Future updates from the existing checkout:
+
+```sh
+git add <changed-files>
+git commit -m "Describe the change"
+git push origin main
+```
+
+Check the Actions link above for publishing progress. Source code is public; visitors' photos and schedules stay in their own browsers. Moving from the private preview to this URL uses a different browser storage origin: export/import JSON and select the original photo again to bring your work across.
+
+## Alternative: Cloudflare Pages
 
 - Connect your GitHub repository.
 - Root directory: `web` if this folder lives in the enclosing Glance repository; leave blank if this folder itself is the repository root.

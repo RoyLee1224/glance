@@ -1,0 +1,33 @@
+# Glance
+
+## Product
+
+A local-first weekly schedule editor that composes a timetable over an unchanged user photo and exports a lock-screen wallpaper. The schedule is an overlay; never regenerate the background with AI. The user manually connects the exported lock screen to an iOS Focus and toggles it with Shortcuts.
+
+## Current scope: schedule grid
+
+- Desktop-first web editor, usable on mobile through horizontal grid scrolling and a separate event form.
+- Users choose displayed weekdays from Monday–Sunday and start/end within 00:00–24:00, with 15-minute precision. Default: Monday–Friday, 09:00–21:00. Each displayed day shares the selected time range. Preserve hidden and clipped events and provide an edit/reveal path.
+- Create, edit, move, resize, duplicate, and delete events.
+- Undo with ⌘Z / Ctrl+Z, without a toolbar button. Editable text keeps native undo; project undo waits until dialogs and drag gestures are finished.
+- Move events by dragging the card body. Resize with the dedicated bottom-center grip, visible on hover or selection, with an enlarged hit area and a vertical-resize cursor.
+- User-defined category names and colors, with add/remove and event reassignment. Initial colors: purple courses, blue development, orange clients, gray projects, green leisure. Weekly allocation calculates hours from actual events.
+- Event text follows its category hue, with opaque pastel backgrounds. Show hourly grid lines and subtle half-hour lines; do not draw quarter-hour lines or show grid lines through event cards. Keep 15-minute editing precision.
+- Save on this device using localStorage; no accounts, backend, or calendar integration.
+- Export/import JSON v4 containing events, categories, displayed weekdays/time range, grid layout and glass wallpaper settings. Support v1–v3 migration. Import validates before replacing and can be undone; the selected photo remains separate. No schedule uploads or app-owned database.
+- Export a white-background PNG of the entire configured grid using committed data. Retain category colors, weekday/time labels, grid lines, clipping, and layout settings; exclude editing controls and selection/resize decorations. Export locally, normally at 2× with size limits for large layouts.
+- Load the example schedule from the supplied conversation on first use. Switch Party belongs to Thursday per the written specification; the reference screenshot places it on Friday.
+
+## References
+
+The supplied lock-screen screenshots are private local references outside this repository. They include system clocks and controls. Wallpaper export requires the user’s original photo.
+
+## Wallpaper design
+
+Select a clean original JPG/PNG/WebP photo; drag or nudge the schedule overlay; adjust its position/size and glass opacity, blur, tint and radius. Defaults match the reference: dark glass, category-colored text, top 32% reserved for the clock, width 94%, panel height 53%. The original photo is stored only in local IndexedDB. JSON stores glass/layout settings but excludes photo data.
+
+Preview and PNG use the same canvas compositor, including blurred/refracted backdrop, tint and highlight rim. Export at the original decoded photo resolution. Clock/placement guides do not enter the exported image. Effects stay within the panel, and grid lines are masked behind event cards. Retain the white grid editor for arranging events.
+
+## Later scope
+
+Calendar integration and account synchronization remain outside scope.
