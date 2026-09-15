@@ -264,7 +264,7 @@ export function ScheduleEditor() {
     </header>
     <main className="workspace">
       <section className="page-heading">
-        <div><p className="eyebrow">YOUR WEEK, AT A GLANCE</p><h1>{view === 'grid' ? '每週行程' : '桌布設計'}</h1>{view === 'wallpaper' && <p className="page-description">把這週的安排，疊在你喜歡的照片上。</p>}</div>
+        <div><p className="eyebrow">YOUR WEEK, AT A GLANCE</p><h1>{view === 'grid' ? '每週行程' : '桌布設計'}</h1></div>
         <div className="project-actions">
           <input type="file" accept=".json,application/json" ref={fileInput} hidden aria-label="選擇 Glance JSON 專案" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) void importProject(file); }}/>
           {isMobile ? <DropdownMenu><DropdownMenuTrigger render={<Button variant="outline" className="secondary-button"/>}><FolderOpen/>匯入／匯出</DropdownMenuTrigger><DropdownMenuContent align="end" className="project-file-menu">
