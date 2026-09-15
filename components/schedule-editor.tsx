@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
-import { CalendarDays, Check, Plus, Undo2, X, Copy, Trash2, MousePointer2, AlertCircle, Download, Upload, Settings2 } from 'lucide-react';
+import { CalendarDays, Check, Plus, X, Copy, Trash2, MousePointer2, AlertCircle, Download, Upload, Settings2 } from 'lucide-react';
 import { flushSync } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,13 +38,13 @@ export function ScheduleEditor() {
   }
   const projectRef = useRef(project);
   const history = useRef<ProjectDocument[]>([]);
-  const [canUndo, setCanUndo] = useState(false);
   const ready = true;
   const [saveState, setSaveState] = useState(initial.error ? '無法讀取儲存資料' : '已儲存在此裝置');
   const [storageError, setStorageError] = useState(initial.error);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dragPreview, setDragPreview] = useState<ScheduleEvent | null>(null);
+  const [dragType, setDragType] = useState<Gesture['type'] | null>(null);
   const gesture = useRef<Gesture | null>(null);
   const grid = useRef<HTMLDivElement>(null);
   const inspector = useRef<HTMLElement>(null);
@@ -70,7 +70,6 @@ export function ScheduleEditor() {
   }, []);
   const commitProject = useCallback((next: ProjectDocument) => {
     history.current = [...history.current.slice(-49), projectRef.current];
-    setCanUndo(true);
     persist(next);
   }, [persist]);
   const commit = useCallback((next: ScheduleEvent[]) => commitProject({ ...projectRef.current, events: next }), [commitProject]);
@@ -93,15 +92,6 @@ export function ScheduleEditor() {
     if (focus && window.matchMedia('(max-width: 850px)').matches) {
       requestAnimationFrame(() => inspector.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     }
-  }
-  function undo() {
-    const previous = history.current.pop();
-    if (!previous) return;
-    persist(previous);
-    setCanUndo(history.current.length > 0);
-    setDraft(null);
-    setSelectedId(null);
-    setFileMessage(null);
   }
   function exportProject() {
     try {
@@ -130,14 +120,29 @@ export function ScheduleEditor() {
   function cancelGesture() {
     gesture.current = null;
     setDragPreview(null);
+    setDragType(null);
   }
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape') cancelGesture();
+      if (event.defaultPrevented || event.isComposing || event.altKey || event.shiftKey) return;
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'z') return;
+      if (settingsOpen || pendingImport || gesture.current) return;
+      // Leave text undo to the focused editor, including contenteditable fields.
+      const editingText = event.composedPath().some(target => target instanceof HTMLElement &&
+        (target.isContentEditable || target.matches('input, textarea, [role="textbox"]')));
+      if (editingText) return;
+      const previous = history.current.pop();
+      if (!previous) return;
+      event.preventDefault();
+      persist(previous);
+      setDraft(null);
+      setSelectedId(null);
+      setFileMessage(null);
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, []);
+  }, [settingsOpen, pendingImport, persist]);
 
   function coordinates(clientX: number, clientY: number) {
     const rect = grid.current!.getBoundingClientRect();
@@ -169,6 +174,7 @@ export function ScheduleEditor() {
       const end = Math.max(active.source.start + STEP, point.minute);
       active.preview = { ...active.source, start, end: Math.min(end, rangeEnd) };
     }
+    setDragType(active.type);
     setDragPreview(active.preview);
   }
   function endPointer(event: PointerEvent) {
@@ -202,13 +208,13 @@ export function ScheduleEditor() {
       {fileMessage && (fileMessage.error ? <div className="storage-warning" role="alert">{fileMessage.text}</div> : <output className="file-status">{fileMessage.text}</output>)}
       <div className="editor-layout">
         <section className="schedule-card" aria-label="每週行程表">
-          <div className="grid-toolbar"><span><strong>{scheduleGrid.days.map(day => DAYS[day]).join('、')}</strong><span className="toolbar-divider">/</span>{timeLabel(rangeStart)}–{timeLabel(rangeEnd)}</span><div className="grid-tools"><Button variant="ghost" onClick={() => setSettingsOpen(true)}><Settings2/>週表設定</Button><span className="grid-step-label">15 分鐘一格</span><Button variant="ghost" size="icon" disabled={!canUndo} onClick={undo} title="復原上一步" aria-label="復原上一步"><Undo2 /></Button></div></div>
+          <div className="grid-toolbar"><span><strong>{scheduleGrid.days.map(day => DAYS[day]).join('、')}</strong><span className="toolbar-divider">/</span>{timeLabel(rangeStart)}–{timeLabel(rangeEnd)}</span><div className="grid-tools"><Button variant="ghost" onClick={() => setSettingsOpen(true)}><Settings2/>週表設定</Button><span className="grid-step-label">15 分鐘一格</span></div></div>
           <div className="grid-scroll">
             <div className="week-grid">
               <div className="day-headers"><div className="timezone-label">時間</div>{scheduleGrid.days.map(i => <div className="day-header" key={i}><span>{DAY_CODES[i]}</span><strong>{DAYS[i]}</strong></div>)}</div>
               <div className="grid-body">
                 <div className="time-rail" aria-hidden="true">{gridTicks(scheduleGrid).map(time => <span key={time} style={{ top: `${(time - rangeStart) / (rangeEnd - rangeStart) * 100}%` }}>{timeLabel(time)}</span>)}</div>
-                <div className={`day-columns ${dragPreview ? 'is-dragging' : ''}`} ref={grid} onPointerMove={movePointer} onPointerUp={endPointer} onPointerCancel={cancelGesture} onLostPointerCapture={() => { if (gesture.current) cancelGesture(); }}>
+                <div className={`day-columns ${dragPreview ? dragType === 'resize' ? 'is-resizing' : 'is-dragging' : ''}`} ref={grid} onPointerMove={movePointer} onPointerUp={endPointer} onPointerCancel={cancelGesture} onLostPointerCapture={() => { if (gesture.current) cancelGesture(); }}>
                   <div className="grid-lines" aria-hidden="true">{Array.from({ length: (rangeEnd - rangeStart) / STEP + 1 }, (_, index) => rangeStart + index * STEP).filter(time => time % 30 === 0 && time > rangeStart && time < rangeEnd).map(time => <i className={time % 60 === 0 ? 'hour-line' : ''} key={time} style={{ top: `${(time - rangeStart) / (rangeEnd - rangeStart) * 100}%` }}/>)}</div>
                   {scheduleGrid.days.map(i => <div className="day-column" key={i}>
                     <button className="empty-day" aria-label={`在${DAYS[i]}新增行程`} onPointerDown={event => beginGesture(event)} onClick={event => {
@@ -244,7 +250,7 @@ export function ScheduleEditor() {
           <p className="local-note">行程與排版存在此瀏覽器。匯出 JSON 可備份或移到其他裝置。</p>
         </aside>
       </div>
-      <p className="interaction-hint">拖曳空白格新增 · 拖動行程換時間 · 拉動底邊調整長度 · Esc 取消拖曳<span className="mobile-hint">手機可左右滑動週表，點選行程後在下方編輯。</span></p>
+      <p className="interaction-hint">拖曳空白格新增 · 拖動行程換時間 · 拖動底部把手調整長度 · Esc 取消拖曳 · ⌘Z / Ctrl+Z 復原<span className="mobile-hint">手機可左右滑動週表，點選行程後在下方編輯。</span></p>
     </main>
     {settingsOpen && <ProjectSettings project={project} onClose={() => setSettingsOpen(false)} onApply={(nextCategories, nextGrid, reassignments) => {
       const next = applyProjectSettings(projectRef.current, nextCategories, nextGrid, reassignments);
@@ -253,7 +259,7 @@ export function ScheduleEditor() {
       setSettingsOpen(false);
       cancelGesture();
     }}/>}
-    <AlertDialog open={pendingImport !== null} onOpenChange={open => { if (!open) setPendingImport(null); }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>匯入專案？</AlertDialogTitle><AlertDialogDescription>「{pendingImport?.filename}」包含 {pendingImport?.project.events.length ?? 0} 個行程及排版設定。匯入會取代目前週表與尚未儲存的編輯；目前已儲存的週表可用「復原上一步」恢復。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction onClick={() => { if (!pendingImport) return; commitProject(pendingImport.project); setPendingImport(null); setDraft(null); setSelectedId(null); cancelGesture(); setFileMessage({ text: '已匯入週表與排版設定。', error: false }); }}>匯入並取代</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <AlertDialog open={pendingImport !== null} onOpenChange={open => { if (!open) setPendingImport(null); }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>匯入專案？</AlertDialogTitle><AlertDialogDescription>「{pendingImport?.filename}」包含 {pendingImport?.project.events.length ?? 0} 個行程及排版設定。匯入會取代目前週表與尚未儲存的編輯；目前已儲存的週表可用 ⌘Z／Ctrl+Z 恢復。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction onClick={() => { if (!pendingImport) return; commitProject(pendingImport.project); setPendingImport(null); setDraft(null); setSelectedId(null); cancelGesture(); setFileMessage({ text: '已匯入週表與排版設定。', error: false }); }}>匯入並取代</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>;
 }
 

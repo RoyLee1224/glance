@@ -11,11 +11,11 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. Click/drag an empty slot to create an event, drag an event to move it, or drag its lower edge to resize it. Click a block to edit its name, day, times, or category. The form supports keyboard and touch input; on mobile it appears below the horizontally scrollable grid. Changes are saved in this browser's localStorage. Undo reverses up to 50 changes in the current session, including layout changes and project imports.
+Open http://localhost:3000. Click/drag an empty slot to create an event, drag an event to move it, or drag its lower edge to resize it. Click a block to edit its name, day, times, or category. The form supports keyboard and touch input; on mobile it appears below the horizontally scrollable grid. Changes are saved in this browser's localStorage. Press **⌘Z** (Mac) or **Ctrl+Z** (Windows/Linux) to undo up to 50 changes in the current session, including layout changes and project imports. Undo uses the keyboard shortcut only; text fields retain native text undo. Project undo is paused while a dialog or drag is active.
 
 ## Portable project files
 
-Use **匯出 JSON** to download the committed schedule, custom category names/colors, displayed weekdays/time range, and layout (hour height, minimum day width, and event font size). Unsaved form edits are excluded. **匯入 JSON** validates a file locally and asks before replacing the current project. The previous saved project can be restored with Undo. Invalid files leave the current project untouched.
+Use **匯出 JSON** to download the committed schedule, custom category names/colors, displayed weekdays/time range, and layout (hour height, minimum day width, and event font size). Unsaved form edits are excluded. **匯入 JSON** validates a file locally and asks before replacing the current project. The previous saved project can be restored with **⌘Z / Ctrl+Z**. Invalid files leave the current project untouched.
 
 The portable format contains `format: "glance"`, `version: 3`, `events`, `categories`, `grid` (days, start, end), and `layout`. Version 1 and 2 backups migrate with default categories/display range; existing layout is preserved. Files are limited to 1 MiB and 1,000 events; incompatible versions or unsupported layout fields are rejected. Versioned format details are in `lib/project.ts`. Existing browser data migrates on the next save; the legacy storage key is left intact.
 
@@ -41,6 +41,8 @@ The build checks TypeScript and emits static files to `dist/`.
 The same static output works on Netlify, Vercel, or Sites. No secrets, database, or server process are needed. Browser storage is specific to the browser and origin; localhost and a deployed URL have separate schedules.
 
 ## Scope
+
+Move an event by dragging its body. Hover or select it to reveal a bottom-center resize grip with a 24px-tall pointer target (32px on touch screens). The grip occupies at most half the card width so short events retain a separate move area. Resizing keeps the vertical-resize cursor throughout the gesture.
 
 Event titles and times follow the category color, using darker text on opaque pastel cards. Grid lines appear on the hour with lighter half-hour subdivisions; pointer editing still snaps to 15 minutes. Custom light category colors receive darker text for readability.
 
