@@ -42,6 +42,8 @@ The same static output works on Netlify, Vercel, or Sites. No secrets, database,
 
 ## Scope
 
+Event titles and times follow the category color, using darker text on opaque pastel cards. Grid lines appear on the hour with lighter half-hour subdivisions; pointer editing still snaps to 15 minutes. Custom light category colors receive darker text for readability.
+
 Default display: Monday–Friday, 09:00–21:00. Users can select any weekdays (Monday–Sunday) and a shared daily start/end within 00:00–24:00, in 15-minute increments. Use **週表設定** or **編輯分類** to customize. Category labels/colors are editable; categories can be added and removed, with reassignment of existing events. At least one category and weekday are required. The supplied example contains 19 events and 34 scheduled hours. Switch Party is Thursday, following the written specification. Overlapping appointments are displayed side by side; total hours sum all event durations, including overlaps and events outside the display range. Narrowing the display preserves all data: intersecting events are clipped visually, and an off-grid list provides edit/reveal actions. **顯示全部** expands the grid to include every event. Overnight events should be split at midnight; the end selector supports 24:00.
 
 Liquid Glass rendering, photo compositing, PNG export, calendar integration, and account synchronization are later milestones. The lock-screen screenshots in the parent folder are visual references, not clean original wallpaper assets.

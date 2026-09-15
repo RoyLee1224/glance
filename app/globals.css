@@ -102,8 +102,8 @@ h1 { font-size:30px; letter-spacing:1px; font-weight:650; line-height:1.3; margi
 .grid-body { height:var(--grid-height,864px); }
 .day-column { background-image:none; }
 .grid-lines { position:absolute; inset:0; pointer-events:none; }
-.grid-lines i { display:block; position:absolute; left:0; right:0; border-top:1px solid #f1f3f7; }
-.grid-lines .hour-line { border-top-color:#e0e5ed; }
+.grid-lines i { display:block; position:absolute; left:0; right:0; border-top:1px solid #f3f5f8; }
+.grid-lines .hour-line { border-top-color:#e7eaf0; }
 .grid-toolbar { height:auto; min-height:61px; padding-top:10px; padding-bottom:10px; flex-wrap:wrap; }
 .grid-toolbar>span { line-height:1.7; }.grid-tools { margin-left:auto; gap:8px; }
 .summary-heading { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:14px; }.summary-heading h3 { margin:0; }.summary-heading button { font-size:13px; }

@@ -13,6 +13,7 @@ import { createProject, decodeProject, encodeProject, PROJECT_STORAGE_KEY, LEGAC
 import { registerScheduleTools } from '@/lib/schedule-tools';
 import { ProjectSettings } from '@/components/project-settings';
 import { TimeSelect } from '@/components/time-select';
+import { eventColors } from '@/lib/event-colors';
 
 function loadInitialSchedule() {
   try {
@@ -208,7 +209,7 @@ export function ScheduleEditor() {
               <div className="grid-body">
                 <div className="time-rail" aria-hidden="true">{gridTicks(scheduleGrid).map(time => <span key={time} style={{ top: `${(time - rangeStart) / (rangeEnd - rangeStart) * 100}%` }}>{timeLabel(time)}</span>)}</div>
                 <div className={`day-columns ${dragPreview ? 'is-dragging' : ''}`} ref={grid} onPointerMove={movePointer} onPointerUp={endPointer} onPointerCancel={cancelGesture} onLostPointerCapture={() => { if (gesture.current) cancelGesture(); }}>
-                  <div className="grid-lines" aria-hidden="true">{Array.from({ length: (rangeEnd - rangeStart) / STEP + 1 }, (_, index) => rangeStart + index * STEP).map(time => <i className={time % 60 === 0 ? 'hour-line' : ''} key={time} style={{ top: `${(time - rangeStart) / (rangeEnd - rangeStart) * 100}%` }}/>)}</div>
+                  <div className="grid-lines" aria-hidden="true">{Array.from({ length: (rangeEnd - rangeStart) / STEP + 1 }, (_, index) => rangeStart + index * STEP).filter(time => time % 30 === 0 && time > rangeStart && time < rangeEnd).map(time => <i className={time % 60 === 0 ? 'hour-line' : ''} key={time} style={{ top: `${(time - rangeStart) / (rangeEnd - rangeStart) * 100}%` }}/>)}</div>
                   {scheduleGrid.days.map(i => <div className="day-column" key={i}>
                     <button className="empty-day" aria-label={`在${DAYS[i]}新增行程`} onPointerDown={event => beginGesture(event)} onClick={event => {
                     if (suppressClick.current || !ready) return;
@@ -218,9 +219,9 @@ export function ScheduleEditor() {
                   }} />
                     {layoutDay(visibleEvents, i).map(item => {
                       const part = visiblePart(item, scheduleGrid)!;
-                      const color = categories.find(c => c.id === item.category)!.color;
+                      const colors = eventColors(categories.find(c => c.id === item.category)!.color);
                       const compact = (part.end - part.start) / (rangeEnd - rangeStart) * gridHeight < project.layout.fontSize * 1.35 + 34;
-                      const style: CSSProperties = { top: `${(part.start - rangeStart) / (rangeEnd - rangeStart) * 100}%`, height: `calc(${(part.end - part.start) / (rangeEnd - rangeStart) * 100}% - 3px)`, left: `calc(${item.lane / item.lanes * 100}% + 5px)`, width: `calc(${100 / item.lanes}% - 10px)`, '--event-accent': color, '--event-bg': `${color}20`, '--event-border': `${color}45`, '--event-text': '#334155' } as CSSProperties;
+                      const style: CSSProperties = { top: `${(part.start - rangeStart) / (rangeEnd - rangeStart) * 100}%`, height: `calc(${(part.end - part.start) / (rangeEnd - rangeStart) * 100}% - 3px)`, left: `calc(${item.lane / item.lanes * 100}% + 5px)`, width: `calc(${100 / item.lanes}% - 10px)`, '--event-accent': colors.accent, '--event-bg': colors.background, '--event-border': colors.border, '--event-text': colors.text } as CSSProperties;
                       const label = `${DAYS[i]} ${timeLabel(item.start)}–${timeLabel(item.end)}，${item.title}，${categories.find(c => c.id === item.category)?.label}`;
                       return <div key={item.id} className={`event-block category-${item.category} ${selectedId === item.id ? 'is-selected' : ''} ${dragPreview?.id === item.id ? 'is-preview' : ''} ${compact ? 'is-compact' : ''}`} style={style}>
                         <button className="event-content" aria-label={`編輯 ${label}`} title={label} disabled={!ready} onPointerDown={event => beginGesture(event, item)} onClick={event => { event.stopPropagation(); if (!suppressClick.current) openEditor(item); }}><strong>{item.title}</strong>{!compact && <span>{timeLabel(item.start)}–{timeLabel(item.end)}</span>}</button>
