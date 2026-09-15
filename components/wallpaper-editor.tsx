@@ -1,16 +1,28 @@
 'use client';
 
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
-import { ImagePlus, Download, RefreshCw, Trash2, Move, Sparkles } from 'lucide-react';
+import { ImagePlus, Download, RefreshCw, Trash2, Move, Sparkles, Smartphone, Image, LockKeyhole, Signal, Wifi, BatteryFull, Flashlight, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { WallpaperRenderer } from '@/lib/wallpaper-image';
 import { loadPhoto, readSavedPhoto, savePhoto, type LoadedPhoto } from '@/lib/wallpaper-photo';
 import { DEFAULT_WALLPAPER, positionWallpaper, type WallpaperSettings } from '@/lib/wallpaper-settings';
+import { IPHONE_SCREEN, phonePhotoBounds } from '@/lib/wallpaper-preview';
 import type { ProjectDocument } from '@/lib/project';
 
 type Drag = { pointerId: number; clientX: number; clientY: number; width: number; height: number; start: WallpaperSettings; next: WallpaperSettings; moved: boolean };
+
+function LockScreenOverlay() {
+  const [date] = useState(() => new Intl.DateTimeFormat('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date()));
+  return <div className="wallpaper-lock-screen" aria-hidden="true">
+    <div className="wallpaper-status-bar"><LockKeyhole/><span><Signal/><Wifi/><BatteryFull/></span></div>
+    <div className="wallpaper-lock-clock"><span>{date}</span><strong>9:41</strong></div>
+    <div className="wallpaper-lock-controls"><span><Flashlight/></span><span><Camera/></span></div>
+    <div className="wallpaper-home-indicator"/>
+  </div>;
+}
 
 export function WallpaperEditor({ project, onChange }: { project: ProjectDocument; onChange: (settings: WallpaperSettings) => void }) {
   const [photo, setPhoto] = useState<LoadedPhoto | null>(null);
@@ -19,12 +31,16 @@ export function WallpaperEditor({ project, onChange }: { project: ProjectDocumen
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
   const [editing, setEditing] = useState<WallpaperSettings | null>(null);
   const [clockGuide, setClockGuide] = useState(true);
+  const [previewMode, setPreviewMode] = useState('iphone');
   const [dragging, setDragging] = useState(false);
   const canvas = useRef<HTMLCanvasElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const renderer = useRef<WallpaperRenderer | null>(null);
   const drag = useRef<Drag | null>(null);
   const settings = editing ?? project.wallpaper;
+  const isPhone = previewMode === 'iphone';
+  const photoRatio = photo ? photo.image.naturalWidth / photo.image.naturalHeight : IPHONE_SCREEN.width / IPHONE_SCREEN.height;
+  const photoBounds = photo && isPhone ? phonePhotoBounds(photo.image.naturalWidth, photo.image.naturalHeight) : { width: 100, height: 100 };
 
   useEffect(() => {
     let cancelled = false;
@@ -161,10 +177,16 @@ export function WallpaperEditor({ project, onChange }: { project: ProjectDocumen
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z' && (editing || drag.current)) { event.preventDefault(); cancelDrag(); }
   }}>
     <div className="wallpaper-preview-column">
-      <div className="wallpaper-preview-heading"><span><Sparkles size={16}/>Liquid Glass 預覽</span>{photo && <span>{photo.image.naturalWidth} × {photo.image.naturalHeight}</span>}</div>
-      {photo ? <div className="wallpaper-photo-frame" style={{ aspectRatio: `${photo.image.naturalWidth} / ${photo.image.naturalHeight}`, width: `min(100%, 410px, ${74 * photo.image.naturalWidth / photo.image.naturalHeight}vh)` }}>
+      <div className="wallpaper-preview-heading"><span><Smartphone size={16}/>桌布預覽</span>{photo && <span>{photo.image.naturalWidth} × {photo.image.naturalHeight}</span>}</div>
+      <ToggleGroup className="wallpaper-preview-modes" aria-label="預覽方式" value={[previewMode]} onValueChange={value => { if (value.length) { cancelDrag(); setPreviewMode(value[0]); } }}>
+        <ToggleGroupItem value="iphone"><Smartphone/>iPhone</ToggleGroupItem>
+        <ToggleGroupItem value="image"><Image/>完整圖片</ToggleGroupItem>
+      </ToggleGroup>
+      <div className={`wallpaper-device ${isPhone ? 'is-iphone' : 'is-image'}`} style={isPhone ? undefined : { width: `min(100%, 440px, ${74 * photoRatio}vh)` }}>
+        {isPhone && <div className="wallpaper-device-buttons" aria-hidden="true"><i/><i/><i/><i/></div>}
+        <div className="wallpaper-screen" style={{ aspectRatio: isPhone ? `${IPHONE_SCREEN.width} / ${IPHONE_SCREEN.height}` : photoRatio }}>
+        {photo ? <div className="wallpaper-photo-layer" style={{ width: `${photoBounds.width}%`, height: `${photoBounds.height}%` }}>
         <canvas ref={canvas} aria-label="原始底圖與玻璃週表合成預覽"/>
-        {clockGuide && <div className="wallpaper-clock-guide" aria-hidden="true"><span>時鐘預留區</span><strong>9:41</strong></div>}
         <button type="button" className={`wallpaper-placement ${dragging ? 'is-moving' : ''}`} style={{ left: `${settings.x * 100}%`, top: `${settings.y * 100}%`, width: `${settings.width * 100}%`, height: `${settings.height * 100}%`, borderRadius: `${settings.radius * settings.width / 4}cqw` }}
           aria-label="移動行程表位置；方向鍵微調，Esc 取消" title="拖曳移動整張週表"
           onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={cancelDrag} onLostPointerCapture={() => { if (drag.current) cancelDrag(); }}
@@ -176,10 +198,13 @@ export function WallpaperEditor({ project, onChange }: { project: ProjectDocumen
             const step = event.shiftKey ? 0.05 : 0.01;
             onChange(positionWallpaper(settings, { x: settings.x + direction[0] * step, y: settings.y + direction[1] * step }));
           }}><span><Move size={14}/>拖曳移動</span></button>
-      </div> : <div className="wallpaper-empty">
+        </div> : <div className="wallpaper-empty">
         <div className="wallpaper-empty-glass"><Sparkles size={28}/><h2>你的照片，這週的安排。</h2><p>選擇底圖，讓行程浮在玻璃表面。</p><Button className="primary-button" onClick={() => input.current?.click()} disabled={loading}><ImagePlus/>{loading ? '讀取中…' : '選擇底圖'}</Button></div>
-      </div>}
-      <p className="wallpaper-preview-note">上方預留鎖定畫面時鐘；時鐘參考與拖曳框不會匯出。</p>
+        </div>}
+        {isPhone && <><div className="wallpaper-dynamic-island" aria-hidden="true"/>{clockGuide && <LockScreenOverlay/>}</>}
+        </div>
+      </div>
+      <p className="wallpaper-preview-note">{isPhone ? '依 iPhone 比例置中裁切；實際位置可在 iOS 調整。' : '完整顯示匯出圖片，可調整螢幕裁切範圍外的行程。'}<br/>手機外框、鎖定介面與拖曳框不會匯出。</p>
     </div>
 
     <aside className="wallpaper-controls" aria-label="桌布設定">
@@ -194,7 +219,7 @@ export function WallpaperEditor({ project, onChange }: { project: ProjectDocumen
       </section>
       <section><h2>玻璃效果</h2><div className="wallpaper-slider-grid">{glass.map(({ key, label, min, max, factor, unit }) => slider(key, label, min, max, factor, unit))}</div>
         <label className="wallpaper-tint"><span>玻璃色調</span><input aria-label="玻璃色調" type="color" value={settings.tint} onChange={event => setEditing({ ...settings, tint: event.currentTarget.value })} onBlur={event => { onChange({ ...settings, tint: event.currentTarget.value }); setEditing(null); }}/></label>
-        <label className="wallpaper-clock-toggle"><span>顯示時鐘參考</span><Switch checked={clockGuide} onCheckedChange={setClockGuide}/></label>
+        <label className="wallpaper-clock-toggle"><span>顯示鎖定畫面介面</span><Switch checked={clockGuide} onCheckedChange={setClockGuide} disabled={!isPhone}/></label>
       </section>
       {message && (message.error ? <p className="wallpaper-message has-error" role="alert">{message.text}</p> : <output className="wallpaper-message">{message.text}</output>)}
       <Button className="primary-button wallpaper-export" disabled={!photo || loading || exporting} onClick={() => void exportWallpaper()}><Download/>{exporting ? '正在合成…' : '匯出桌布 PNG'}</Button>

@@ -28,6 +28,8 @@ Select a clean original JPG/PNG/WebP photo; drag or nudge the schedule overlay; 
 
 Preview and PNG use the same canvas compositor, including blurred/refracted backdrop, tint and highlight rim. Export at the original decoded photo resolution. Clock/placement guides do not enter the exported image. Effects stay within the panel, and grid lines are masked behind event cards. Retain the white grid editor for arranging events.
 
+Default wallpaper preview uses a representative iPhone frame with a fixed 393:852 screen ratio, rounded screen, Dynamic Island and optional lock-screen date, clock and bottom controls. Center-crop the composite to fill this screen without stretching; the full-image view shows the complete export and keeps off-screen areas editable. Device chrome and crop simulation are preview-only; preserve original-resolution PNG output and saved wallpaper coordinates.
+
 ## Later scope
 
 Calendar integration and account synchronization remain outside scope.
