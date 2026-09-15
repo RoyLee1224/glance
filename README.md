@@ -11,7 +11,15 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. Click/drag an empty slot to create an event, drag an event to move it, or drag its lower edge to resize it. Click a block to edit its name, day, times, or category. The form supports keyboard and touch input; on mobile it appears below the horizontally scrollable grid. Changes are saved in this browser's localStorage. Undo reverses up to 50 changes in the current session.
+Open http://localhost:3000. Click/drag an empty slot to create an event, drag an event to move it, or drag its lower edge to resize it. Click a block to edit its name, day, times, or category. The form supports keyboard and touch input; on mobile it appears below the horizontally scrollable grid. Changes are saved in this browser's localStorage. Undo reverses up to 50 changes in the current session, including layout changes and project imports.
+
+## Portable project files
+
+Use **匯出 JSON** to download the committed schedule and layout (hour height, minimum day width, and event font size). Unsaved form edits are excluded. **匯入 JSON** validates a file locally and asks before replacing the current project. The previous saved project can be restored with Undo. Invalid files leave the current project untouched.
+
+The portable format contains `format: "glance"`, `version: 2`, `events`, and `layout`. Version 1 schedule backups are also accepted, with default layout. Files are limited to 1 MiB and 1,000 events; incompatible versions or unsupported layout fields are rejected. Versioned format details are in `lib/project.ts`. Existing browser data migrates on the next save; the legacy storage key is left intact.
+
+No application database, login, analytics, or network upload of schedules is used. Import and export run in the browser. JSON files are unencrypted and include event names; treat them as personal files. Clearing browser storage removes the local copy, so export a backup before switching browser or origin. Hosting providers may process ordinary web access logs independently of the app. Optional WebMCP tools expose schedule actions to compatible browser agents; the app itself does not send schedules to an AI API.
 
 ## Validation
 
