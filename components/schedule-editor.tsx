@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
-import { CalendarDays, Check, Plus, X, Copy, Trash2, MousePointer2, AlertCircle, Download, Upload, Settings2 } from 'lucide-react';
+import { CalendarDays, Check, Plus, X, Copy, Trash2, MousePointer2, AlertCircle, Download, Upload, Settings2, ImageDown } from 'lucide-react';
 import { flushSync } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { registerScheduleTools } from '@/lib/schedule-tools';
 import { ProjectSettings } from '@/components/project-settings';
 import { TimeSelect } from '@/components/time-select';
 import { eventColors } from '@/lib/event-colors';
+import { createSchedulePng } from '@/lib/schedule-image';
 
 function loadInitialSchedule() {
   try {
@@ -52,6 +53,7 @@ export function ScheduleEditor() {
   const suppressClick = useRef(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
+  const [exportingImage, setExportingImage] = useState(false);
   const [pendingImport, setPendingImport] = useState<{ project: ProjectDocument; filename: string } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [fileMessage, setFileMessage] = useState<{ text: string; error: boolean } | null>(null);
@@ -106,6 +108,30 @@ export function ScheduleEditor() {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       setFileMessage({ text: '已準備下載週表與排版設定。不含表單中尚未儲存的編輯。', error: false });
     } catch (error) { setFileMessage({ text: error instanceof Error ? error.message : '無法匯出 JSON。', error: true }); }
+  }
+  async function exportImage() {
+    if (exportingImage) return;
+    setExportingImage(true);
+    setFileMessage(null);
+    try {
+      const { blob, width, height } = await createSchedulePng(projectRef.current);
+      const url = URL.createObjectURL(blob);
+      try {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `glance-weekly-${new Date().toISOString().slice(0, 10)}.png`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } finally {
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      }
+      setFileMessage({ text: `已準備下載 ${width} × ${height} PNG。圖片包含目前顯示範圍內已儲存的行程。`, error: false });
+    } catch (error) {
+      setFileMessage({ text: error instanceof Error ? error.message : '無法匯出圖片，請稍後再試。', error: true });
+    } finally {
+      setExportingImage(false);
+    }
   }
   async function importProject(file: File) {
     setImporting(true);
@@ -203,7 +229,7 @@ export function ScheduleEditor() {
       <output className={`save-state ${storageError ? 'has-error' : ''}`}>{storageError ? <AlertCircle size={14} /> : <Check size={14} />}{saveState}</output>
     </header>
     <main className="workspace">
-      <section className="page-heading"><div><p className="eyebrow">YOUR WEEK, AT A GLANCE</p><h1>每週行程</h1><p className="page-description">在空白時段拖曳，開始安排一週。</p></div><div className="project-actions"><input type="file" accept=".json,application/json" ref={fileInput} hidden aria-label="選擇 Glance JSON 專案" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) void importProject(file); }}/><Button variant="outline" className="secondary-button" disabled={importing} onClick={() => fileInput.current?.click()}><Upload />{importing ? '讀取中…' : '匯入 JSON'}</Button><Button variant="outline" className="secondary-button" onClick={exportProject}><Download />匯出 JSON</Button><Button className="primary-button" disabled={!ready} onClick={() => openEditor(makeEvent(), true)}><Plus />新增行程</Button></div></section>
+      <section className="page-heading"><div><p className="eyebrow">YOUR WEEK, AT A GLANCE</p><h1>每週行程</h1><p className="page-description">在空白時段拖曳，開始安排一週。</p></div><div className="project-actions"><input type="file" accept=".json,application/json" ref={fileInput} hidden aria-label="選擇 Glance JSON 專案" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) void importProject(file); }}/><Button variant="outline" className="secondary-button" disabled={importing} onClick={() => fileInput.current?.click()}><Upload />{importing ? '讀取中…' : '匯入 JSON'}</Button><Button variant="outline" className="secondary-button" onClick={exportProject}><Download />匯出 JSON</Button><Button variant="outline" className="secondary-button" disabled={exportingImage} onClick={() => void exportImage()} title="匯出目前顯示範圍的白底週表（PNG）"><ImageDown />{exportingImage ? '匯出中…' : '匯出 PNG'}</Button><Button className="primary-button" disabled={!ready} onClick={() => openEditor(makeEvent(), true)}><Plus />新增行程</Button></div></section>
       {storageError && <div className="storage-warning" role="alert"><AlertCircle size={18}/>{storageError}</div>}
       {fileMessage && (fileMessage.error ? <div className="storage-warning" role="alert">{fileMessage.text}</div> : <output className="file-status">{fileMessage.text}</output>)}
       <div className="editor-layout">

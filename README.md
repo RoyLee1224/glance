@@ -30,6 +30,12 @@ npm run build
 
 The build checks TypeScript and emits static files to `dist/`.
 
+## PNG export
+
+Use **匯出 PNG** to download a white-background image of the full configured grid, including columns beyond the current viewport. It uses committed events, selected days/time range, category colors, hour height, day width and font size. Hidden events and unsaved form edits are excluded; events crossing the range are clipped as in the editor. The output has weekday headings and time labels, without editing controls or selection/resize decorations.
+
+`lib/schedule-image.ts` draws directly to a browser canvas using the same schedule and color helpers. No dependencies or uploads are needed. PNGs normally render at 2×; very large layouts scale down to stay within 4,096 pixels per side and 8 million pixels total. Font rendering follows the current device. Photo backgrounds, transparent/glass styling and lock-screen placement remain future work.
+
 ## Deploy to Cloudflare Pages
 
 - Connect your GitHub repository.
@@ -48,6 +54,6 @@ Event titles and times follow the category color, using darker text on opaque pa
 
 Default display: Monday–Friday, 09:00–21:00. Users can select any weekdays (Monday–Sunday) and a shared daily start/end within 00:00–24:00, in 15-minute increments. Use **週表設定** or **編輯分類** to customize. Category labels/colors are editable; categories can be added and removed, with reassignment of existing events. At least one category and weekday are required. The supplied example contains 19 events and 34 scheduled hours. Switch Party is Thursday, following the written specification. Overlapping appointments are displayed side by side; total hours sum all event durations, including overlaps and events outside the display range. Narrowing the display preserves all data: intersecting events are clipped visually, and an off-grid list provides edit/reveal actions. **顯示全部** expands the grid to include every event. Overnight events should be split at midnight; the end selector supports 24:00.
 
-Liquid Glass rendering, photo compositing, PNG export, calendar integration, and account synchronization are later milestones. The lock-screen screenshots in the parent folder are visual references, not clean original wallpaper assets.
+Liquid Glass rendering, photo compositing, calendar integration, and account synchronization are later milestones. The lock-screen screenshots in the parent folder are visual references, not clean original wallpaper assets.
 
 `lib/schedule.ts` is the renderer-independent schedule model. `lib/schedule-tools.ts` exposes optional WebMCP reading and batched creation/editing to supported browsers. Its contract has unit coverage; live WebMCP/browser interaction verification requires a connected compatible browser.
