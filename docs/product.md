@@ -6,11 +6,12 @@ A local-first weekly schedule editor that composes a timetable over an unchanged
 
 ## Current scope: schedule grid
 
-- Desktop-first web editor, usable on mobile through horizontal grid scrolling and a separate event form.
+- Phone-first editor: default to one day with weekday navigation, with an optional whole-week overview. Desktop retains the full weekly grid and side inspector. Mobile view choices never alter saved weekdays or export scope.
 - Users choose displayed weekdays from Monday–Sunday and start/end within 00:00–24:00, with 15-minute precision. Default: Monday–Friday, 09:00–21:00. Each displayed day shares the selected time range. Preserve hidden and clipped events and provide an edit/reveal path.
-- Create, edit, move, resize, duplicate, and delete events.
+- Create, edit, move, resize, duplicate, and delete events. A new unsaved event immediately occupies a dashed, labeled grid card; valid form changes update it, cancel removes it, and only saving adds it to committed data and totals.
+- Phone editing opens in a bottom sheet with scrollable fields and persistent save/cancel actions, resized above the on-screen keyboard. Do not open the keyboard automatically. Use native time selectors, large tap targets and a compact import/export menu.
 - Undo with ⌘Z / Ctrl+Z, without a toolbar button. Editable text keeps native undo; project undo waits until dialogs and drag gestures are finished.
-- Move events by dragging the card body. Resize with the dedicated bottom-center grip, visible on hover or selection, with an enlarged hit area and a vertical-resize cursor.
+- Touch card bodies scroll naturally and open editing on tap. Move events with mouse dragging on the card body. Resize with the dedicated bottom-center grip, visible on hover or selection, with an enlarged hit area and a vertical-resize cursor.
 - User-defined category names and colors, with add/remove and event reassignment. Initial colors: purple learning, blue work, orange meetings, gray personal plans, green leisure. Weekly allocation calculates hours from actual events.
 - Event text follows its category hue, with opaque pastel backgrounds. Show hourly grid lines and subtle half-hour lines; do not draw quarter-hour lines or show grid lines through event cards. Keep 15-minute editing precision.
 - Save on this device using localStorage; no accounts, backend, or calendar integration.
