@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type PointerEvent } from 'react';
-import { ImagePlus, Download, RefreshCw, Trash2, Move, Sparkles, Smartphone, Image, LockKeyhole, Signal, Wifi, BatteryFull, Flashlight, Camera } from 'lucide-react';
+import { ImagePlus, Download, RefreshCw, Trash2, Move, Sparkles, Smartphone, Image, LockKeyhole, Flashlight, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -14,10 +14,31 @@ import type { ProjectDocument } from '@/lib/project';
 
 type Drag = { pointerId: number; clientX: number; clientY: number; width: number; height: number; start: WallpaperSettings; next: WallpaperSettings; moved: boolean };
 
+function LockScreenStatusIcons() {
+  return <span className="wallpaper-status-icons">
+    <svg viewBox="0 0 22 18" fill="currentColor" aria-hidden="true" focusable="false">
+      <rect x="0" y="12" width="4" height="6" rx="1.2"/>
+      <rect x="6" y="8" width="4" height="10" rx="1.2"/>
+      <rect x="12" y="4" width="4" height="14" rx="1.2"/>
+      <rect x="18" y="0" width="4" height="18" rx="1.2"/>
+    </svg>
+    <svg viewBox="0 0 24 18" fill="currentColor" aria-hidden="true" focusable="false">
+      <path d="M1.2 5.3a16.6 16.6 0 0 1 21.6 0l-2.4 2.6a13 13 0 0 0-16.8 0L1.2 5.3Z"/>
+      <path d="M5.3 9.8a10.2 10.2 0 0 1 13.4 0l-2.5 2.6a6.5 6.5 0 0 0-8.4 0L5.3 9.8Z"/>
+      <path d="M9.1 13.9a4.4 4.4 0 0 1 5.8 0L12 17Z"/>
+    </svg>
+    <svg className="wallpaper-status-battery" viewBox="0 0 32 18" fill="currentColor" aria-hidden="true" focusable="false">
+      <rect x=".8" y="1" width="27" height="16" rx="4.8" fill="none" stroke="currentColor" strokeWidth="1.5" opacity=".55"/>
+      <rect x="3.4" y="3.6" width="21.8" height="10.8" rx="2.7"/>
+      <path d="M29.4 6v6c3.2-1.3 3.2-4.7 0-6Z" opacity=".55"/>
+    </svg>
+  </span>;
+}
+
 function LockScreenOverlay() {
   const [date] = useState(() => new Intl.DateTimeFormat('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date()));
   return <div className="wallpaper-lock-screen" aria-hidden="true">
-    <div className="wallpaper-status-bar"><LockKeyhole/><span><Signal/><Wifi/><BatteryFull/></span></div>
+    <div className="wallpaper-status-bar"><LockKeyhole/><LockScreenStatusIcons/></div>
     <div className="wallpaper-lock-clock"><span>{date}</span><strong>9:41</strong></div>
     <div className="wallpaper-lock-controls"><span><Flashlight/></span><span><Camera/></span></div>
     <div className="wallpaper-home-indicator"/>

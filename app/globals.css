@@ -148,7 +148,10 @@ h1 { font-size:30px; letter-spacing:1px; font-weight:650; line-height:1.3; margi
 .wallpaper-dynamic-island::after { content:''; position:absolute; right:8%; top:27%; height:46%; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle at 40% 35%,#172038,#070a12 55%,#000); box-shadow:0 0 0 1px #080a10; }
 .wallpaper-lock-screen { position:absolute; inset:0; z-index:2; color:#fff; pointer-events:none; user-select:none; text-shadow:0 1px 12px #0005; }
 .wallpaper-status-bar { position:absolute; top:2.7%; left:8%; right:8%; display:flex; align-items:center; justify-content:space-between; }
-.wallpaper-status-bar>svg { width:4cqw; height:4cqw; }.wallpaper-status-bar>span { display:flex; align-items:center; gap:1.2cqw; }.wallpaper-status-bar>span svg { width:4.3cqw; height:4.3cqw; }.wallpaper-status-bar>span svg:last-child { width:6cqw; height:5cqw; }
+.wallpaper-status-bar>svg { width:4cqw; height:4cqw; }
+.wallpaper-status-icons { display:flex; align-items:center; gap:1.65cqw; }
+.wallpaper-status-icons svg { display:block; flex-shrink:0; width:5.7cqw; height:4.5cqw; }
+.wallpaper-status-icons .wallpaper-status-battery { width:8cqw; }
 .wallpaper-lock-clock { position:absolute; top:9.8%; left:0; width:100%; text-align:center; }
 .wallpaper-lock-clock span { display:block; font-size:4.6cqw; font-weight:550; letter-spacing:.01em; }
 .wallpaper-lock-clock strong { display:block; font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif; font-size:25cqw; font-weight:650; letter-spacing:-.065em; line-height:1.06; font-variant-numeric:tabular-nums; padding-right:.065em; }
