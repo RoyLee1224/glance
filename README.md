@@ -15,9 +15,9 @@ Open http://localhost:3000. Click/drag an empty slot to create an event, drag an
 
 ## Portable project files
 
-Use **匯出 JSON** to download the committed schedule, custom category names/colors, displayed weekdays/time range, and layout (hour height, minimum day width, and event font size). Unsaved form edits are excluded. **匯入 JSON** validates a file locally and asks before replacing the current project. The previous saved project can be restored with **⌘Z / Ctrl+Z**. Invalid files leave the current project untouched.
+Use **匯出 JSON** to download the committed schedule, custom category names/colors, displayed weekdays/time range, grid layout, and glass wallpaper settings. Unsaved form edits and the background photo are excluded. **匯入 JSON** validates a file locally and asks before replacing the current project; it keeps the currently selected photo. The previous saved project can be restored with **⌘Z / Ctrl+Z**. Invalid files leave the current project untouched.
 
-The portable format contains `format: "glance"`, `version: 3`, `events`, `categories`, `grid` (days, start, end), and `layout`. Version 1 and 2 backups migrate with default categories/display range; existing layout is preserved. Files are limited to 1 MiB and 1,000 events; incompatible versions or unsupported layout fields are rejected. Versioned format details are in `lib/project.ts`. Existing browser data migrates on the next save; the legacy storage key is left intact.
+The portable format contains `format: "glance"`, `version: 4`, `events`, `categories`, `grid` (days, start, end), `layout`, and `wallpaper` (normalized position/size, opacity, blur, tint and radius). Versions 1–3 migrate with appropriate defaults while preserving existing data. Files are limited to 1 MiB and 1,000 events; incompatible versions or unsupported layout fields are rejected. Versioned format details are in `lib/project.ts`. Existing browser data migrates on the next save; legacy storage keys are left intact.
 
 No application database, login, analytics, or network upload of schedules is used. Import and export run in the browser. JSON files are unencrypted and include event names; treat them as personal files. Clearing browser storage removes the local copy, so export a backup before switching browser or origin. Hosting providers may process ordinary web access logs independently of the app. Optional WebMCP tools expose schedule actions to compatible browser agents; the app itself does not send schedules to an AI API.
 
@@ -32,9 +32,17 @@ The build checks TypeScript and emits static files to `dist/`.
 
 ## PNG export
 
-Use **匯出 PNG** to download a white-background image of the full configured grid, including columns beyond the current viewport. It uses committed events, selected days/time range, category colors, hour height, day width and font size. Hidden events and unsaved form edits are excluded; events crossing the range are clipped as in the editor. The output has weekday headings and time labels, without editing controls or selection/resize decorations.
+Use **匯出白底週表** in the grid view to download a white-background image of the full configured grid, including columns beyond the current viewport. It uses committed events, selected days/time range, category colors, hour height, day width and font size. Hidden events and unsaved form edits are excluded; events crossing the range are clipped as in the editor. The output has weekday headings and time labels, without editing controls or selection/resize decorations.
 
-`lib/schedule-image.ts` draws directly to a browser canvas using the same schedule and color helpers. No dependencies or uploads are needed. PNGs normally render at 2×; very large layouts scale down to stay within 4,096 pixels per side and 8 million pixels total. Font rendering follows the current device. Photo backgrounds, transparent/glass styling and lock-screen placement remain future work.
+`lib/schedule-image.ts` draws directly to a browser canvas using the same schedule and color helpers. No dependencies or uploads are needed. Plain PNGs normally render at 2×; very large layouts scale down to stay within 4,096 pixels per side and 8 million pixels total. Font rendering follows the current device.
+
+## Liquid Glass wallpaper
+
+Open **桌布設計**, select a JPG/PNG/WebP photo, position the glass timetable by dragging or with arrow keys, and adjust size, opacity, blur, tint and corners. Defaults follow the reference: 3% left margin, 32% top offset, 94% width and 53% height. Clock guides and placement outlines appear only in the editor. **匯出桌布 PNG** composites at the decoded photo's original dimensions. The original photograph is drawn directly, with glass effects clipped to the panel; no AI image generation or photo uploads occur. Text follows category hues, with automatic light/dark contrast based on the photo and tint. Grid lines are masked out beneath the translucent event cards.
+
+Preview and export share `WallpaperRenderer` in `lib/wallpaper-image.ts`, including a bounded, cached CPU blur that does not depend on browser canvas-filter support. Wallpaper height controls the timetable's vertical fit; the grid editor's font size and column width determine its text scale. Very short/wide panels fit the whole schedule without stretching text.
+
+The original file is stored locally in IndexedDB (`glance.photos`), separately from project JSON. Select the same photo again when transferring a JSON backup to another device. Photo replacement/removal is outside project undo history. File signatures are checked; inputs are limited to 20 MiB, 16 million pixels and an 8,192-pixel longest side. Browser storage or rendering failures are reported without discarding the schedule. Use an original photo without the clock, status bar or buttons baked into a screenshot.
 
 ## Deploy to Cloudflare Pages
 
@@ -54,6 +62,6 @@ Event titles and times follow the category color, using darker text on opaque pa
 
 Default display: Monday–Friday, 09:00–21:00. Users can select any weekdays (Monday–Sunday) and a shared daily start/end within 00:00–24:00, in 15-minute increments. Use **週表設定** or **編輯分類** to customize. Category labels/colors are editable; categories can be added and removed, with reassignment of existing events. At least one category and weekday are required. The supplied example contains 19 events and 34 scheduled hours. Switch Party is Thursday, following the written specification. Overlapping appointments are displayed side by side; total hours sum all event durations, including overlaps and events outside the display range. Narrowing the display preserves all data: intersecting events are clipped visually, and an off-grid list provides edit/reveal actions. **顯示全部** expands the grid to include every event. Overnight events should be split at midnight; the end selector supports 24:00.
 
-Liquid Glass rendering, photo compositing, calendar integration, and account synchronization are later milestones. The lock-screen screenshots in the parent folder are visual references, not clean original wallpaper assets.
+Calendar integration and account synchronization are later milestones. The lock-screen screenshots in the parent folder are visual references, not clean original wallpaper assets.
 
 `lib/schedule.ts` is the renderer-independent schedule model. `lib/schedule-tools.ts` exposes optional WebMCP reading and batched creation/editing to supported browsers. Its contract has unit coverage; live WebMCP/browser interaction verification requires a connected compatible browser.

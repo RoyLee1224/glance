@@ -120,3 +120,40 @@ h1 { font-size:30px; letter-spacing:1px; font-weight:650; line-height:1.3; margi
 .category-reassignment { padding:14px; border:1px solid #e0e5ef; border-radius:9px; background:#f7f8fc; margin-top:14px; }.category-reassignment p { font-size:14px; margin:0 0 10px; }.category-reassignment>div:last-child { display:flex; gap:8px; margin-top:12px; }.add-category { margin-top:14px; height:38px!important; }.settings-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:24px; padding-top:18px; border-top:1px solid var(--border); }
 @media(max-width:850px) { .category-summary,.inspector:has(.event-form) .category-summary { display:block; margin-top:20px; }.grid-step-label { display:none; } }
 @media(max-width:520px) { .project-settings-dialog { padding:20px!important; }.weekday-options label { padding:9px; }.category-edit-row { grid-template-columns:32px minmax(0,1fr) 30px 30px; gap:5px; }.outside-events { padding:14px; }.grid-tools { margin-left:0; } }
+.editor-tabs { gap:22px!important; }
+.editor-tabs>[data-slot=tabs-list] { height:42px; padding:4px; background:#e9ecf3; }
+.editor-tabs [data-slot=tabs-trigger] { padding:8px 22px; font-size:14px; }
+.editor-tabs [data-slot=tabs-trigger][data-active] { background:#fff; }
+.wallpaper-editor { display:grid; grid-template-columns:minmax(0,1fr) 360px; gap:36px; max-width:1080px; margin:0 auto; align-items:start; }
+.wallpaper-preview-column { position:sticky; top:20px; background:#e9ecf1; border:1px solid #dde2ea; border-radius:18px; padding:20px 24px; }
+.wallpaper-preview-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12px; color:#767f90; margin-bottom:18px; }
+.wallpaper-preview-heading>span:first-child { display:flex; align-items:center; gap:7px; color:#455066; font-size:13px; font-weight:550; }
+.wallpaper-photo-frame { position:relative; margin:0 auto; overflow:hidden; border-radius:12px; container-type:inline-size; box-shadow:0 8px 32px #1b29432b; }
+.wallpaper-photo-frame canvas { display:block; width:100%; height:100%; position:absolute; inset:0; }
+.wallpaper-clock-guide { position:absolute; top:9%; left:0; width:100%; text-align:center; color:#e9f3ffcc; pointer-events:none; text-shadow:0 1px 6px #17274840; }
+.wallpaper-clock-guide span { display:block; font-size:3.5cqw; letter-spacing:.12em; }.wallpaper-clock-guide strong { display:block; font-size:23cqw; font-weight:650; letter-spacing:-.045em; line-height:1.18; }
+.wallpaper-placement { position:absolute; background:transparent; border:1px solid transparent; touch-action:none; cursor:grab; user-select:none; padding:0; }
+.wallpaper-placement:hover,.wallpaper-placement:focus-visible,.wallpaper-placement.is-moving { border-color:#fff9; outline:1px dashed #fff9; outline-offset:3px; }
+.wallpaper-placement.is-moving { cursor:grabbing; }
+.wallpaper-placement>span { display:flex; align-items:center; gap:5px; position:absolute; top:8px; right:8px; padding:5px 9px; border-radius:14px; font-size:11px; color:#fff; background:#18273dcc; opacity:0; pointer-events:none; }
+.wallpaper-placement:hover>span,.wallpaper-placement:focus-visible>span,.wallpaper-placement.is-moving>span { opacity:1; }
+.wallpaper-preview-note { color:#727d91; font-size:12px; line-height:1.8; text-align:center; margin:16px 0 0; }
+.wallpaper-empty { max-width:410px; min-height:490px; height:64vh; max-height:680px; margin:0 auto; display:flex; align-items:center; justify-content:center; padding:22px; border-radius:12px; background:radial-gradient(ellipse at 95% 0,#91c5d088,transparent 48%),radial-gradient(ellipse at 0 95%,#267488,transparent 54%),#122848; }
+.wallpaper-empty-glass { text-align:center; padding:30px 16px; border:1px solid #ddefff6b; border-radius:20px; background:linear-gradient(130deg,#daeaff21,#1b334931); box-shadow:0 14px 40px #071d3b33; color:#e6f0ff; }
+.wallpaper-empty-glass>svg { margin:0 auto 18px; color:#c3dafe; }.wallpaper-empty-glass h2 { font-size:20px; line-height:1.5; margin:0; font-weight:550; }.wallpaper-empty-glass p { color:#b9cde6; font-size:13px; line-height:1.8; margin:12px 0 22px; }
+.wallpaper-controls { background:#fff; padding:24px; border:1px solid var(--border); border-radius:16px; }
+.wallpaper-controls>section+section { border-top:1px solid var(--border); margin-top:22px; padding-top:22px; }
+.wallpaper-controls h2 { font-size:15px; font-weight:600; color:#394255; margin:0 0 8px; }.wallpaper-controls section>p { font-size:13px; color:#7b8496; line-height:1.8; margin:0 0 14px; }
+.wallpaper-controls .wallpaper-filename { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#49566d; font-size:12px; background:#f4f6f9; padding:6px 10px; border-radius:6px; }
+.wallpaper-photo-actions { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+.wallpaper-controls .wallpaper-small-note,.wallpaper-small-note { font-size:12px; line-height:1.8; color:#8891a1; margin:10px 0 0; }
+.wallpaper-section-title { display:flex; align-items:center; justify-content:space-between; gap:6px; }.wallpaper-section-title button { font-size:12px; }
+.wallpaper-slider-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px 24px; margin:18px 0 8px; }
+.wallpaper-slider>div:first-child { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#697488; font-size:12px; margin-bottom:12px; }.wallpaper-slider output { color:#35435c; font-variant-numeric:tabular-nums; }
+.wallpaper-slider [data-slot=slider] { padding:6px 0; }
+.wallpaper-tint,.wallpaper-clock-toggle { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:13px; color:#697488; margin-top:20px; }
+.wallpaper-tint input { width:36px; height:30px; padding:2px; border:1px solid #dde3ed; border-radius:7px; cursor:pointer; }
+.wallpaper-export { width:100%; margin-top:24px; }
+.wallpaper-message { display:block; font-size:12px; line-height:1.8; padding:12px; color:#456a54; background:#eff7f1; border-radius:8px; margin:18px 0 0; }.wallpaper-message.has-error { color:#946a2e; background:#fff5e5; }
+@media(max-width:1000px) { .wallpaper-editor { grid-template-columns:minmax(0,1fr) 330px; gap:20px; }.wallpaper-preview-column { padding:16px; }.wallpaper-controls { padding:20px; } }
+@media(max-width:760px) { .wallpaper-editor { grid-template-columns:1fr; gap:20px; }.wallpaper-preview-column { position:static; }.wallpaper-controls { width:100%; }.wallpaper-empty { min-height:380px; height:55vh; }.wallpaper-preview-heading>span:last-child { font-size:11px; } }

@@ -1,15 +1,17 @@
 import { decodeEvents, SAMPLE_EVENTS, CATEGORIES, DEFAULT_GRID, STEP, type ScheduleEvent, type ScheduleCategory, type GridSettings } from './schedule.ts';
+import { DEFAULT_WALLPAPER, readWallpaperSettings, type WallpaperSettings } from './wallpaper-settings.ts';
 
 export type GridLayout = { hourHeight: number; dayWidth: number; fontSize: number };
-export type ProjectDocument = { format: 'glance'; version: 3; events: ScheduleEvent[]; layout: GridLayout; categories: ScheduleCategory[]; grid: GridSettings };
-export const PROJECT_STORAGE_KEY = 'glance.project.v3';
-export const LEGACY_PROJECT_STORAGE_KEY = 'glance.project.v2';
+export type ProjectDocument = { format: 'glance'; version: 4; events: ScheduleEvent[]; layout: GridLayout; categories: ScheduleCategory[]; grid: GridSettings; wallpaper: WallpaperSettings };
+export const PROJECT_STORAGE_KEY = 'glance.project.v4';
+export const LEGACY_PROJECT_STORAGE_KEY = 'glance.project.v3';
+export const OLDER_PROJECT_STORAGE_KEY = 'glance.project.v2';
 export const MAX_PROJECT_BYTES = 1024 * 1024;
 export const MAX_EVENTS = 1000;
 export const DEFAULT_LAYOUT: GridLayout = { hourHeight: 72, dayWidth: 116, fontSize: 14 };
 
 export function createProject(events: ScheduleEvent[] = SAMPLE_EVENTS): ProjectDocument {
-  return { format: 'glance', version: 3, events: events.map(e => ({ ...e })), layout: { ...DEFAULT_LAYOUT }, categories: CATEGORIES.map(c => ({ ...c })), grid: { ...DEFAULT_GRID, days: [...DEFAULT_GRID.days] } };
+  return { format: 'glance', version: 4, events: events.map(e => ({ ...e })), layout: { ...DEFAULT_LAYOUT }, categories: CATEGORIES.map(c => ({ ...c })), grid: { ...DEFAULT_GRID, days: [...DEFAULT_GRID.days] }, wallpaper: { ...DEFAULT_WALLPAPER } };
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -67,16 +69,16 @@ export function decodeProject(raw: string): ProjectDocument {
   try { value = JSON.parse(raw); } catch { throw new Error('檔案不是有效的 JSON，請選擇 Glance 匯出的專案檔。'); }
   if (!record(value) || !Array.isArray(value.events)) throw new Error('找不到行程資料，請選擇 Glance 專案檔。');
   if (value.events.length > MAX_EVENTS) throw new Error('單一專案最多支援 1,000 個行程。');
-  if (value.version !== 1 && value.version !== 2 && value.version !== 3) throw new Error('不支援這個專案版本，請使用相容版本的 Glance 開啟。');
+  if (value.version !== 1 && value.version !== 2 && value.version !== 3 && value.version !== 4) throw new Error('不支援這個專案版本，請使用相容版本的 Glance 開啟。');
   if (value.version !== 1 && value.format !== 'glance') throw new Error('這不是 Glance 專案格式。');
-  const categories = readCategories(value.version === 3 ? value.categories : CATEGORIES);
-  const grid = readGrid(value.version === 3 ? value.grid : DEFAULT_GRID);
+  const categories = readCategories(value.version >= 3 ? value.categories : CATEGORIES);
+  const grid = readGrid(value.version >= 3 ? value.grid : DEFAULT_GRID);
   let events: ScheduleEvent[];
   try {
     events = decodeEvents(value.events, categories);
     if (events.some(e => e.id.length > 128)) throw new Error('Invalid ID');
   } catch { throw new Error('行程資料無效，請確認星期、時間、分類與行程編號。'); }
-  return { format: 'glance', version: 3, events, categories, grid, layout: value.version === 1 ? { ...DEFAULT_LAYOUT } : readLayout(value.layout) };
+  return { format: 'glance', version: 4, events, categories, grid, layout: value.version === 1 ? { ...DEFAULT_LAYOUT } : readLayout(value.layout), wallpaper: value.version === 4 ? readWallpaperSettings(value.wallpaper) : { ...DEFAULT_WALLPAPER } };
 }
 
 export function encodeProject(project: ProjectDocument): string {

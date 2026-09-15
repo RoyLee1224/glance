@@ -70,7 +70,7 @@ export function fitTextLines(text: string, width: number, maxLines: number, meas
   return lines;
 }
 
-type ImageLayout = ReturnType<typeof scheduleImageLayout>;
+export type ImageLayout = ReturnType<typeof scheduleImageLayout>;
 
 function drawCard(ctx: CanvasRenderingContext2D, card: ImageLayout['cards'][number], fontSize: number, fontFamily: string) {
   const { x, y, width, height, colors, event, compact } = card;
@@ -86,6 +86,13 @@ function drawCard(ctx: CanvasRenderingContext2D, card: ImageLayout['cards'][numb
   ctx.fillStyle = colors.accent;
   ctx.fillRect(x, y, 3, height);
 
+  drawEventText(ctx, card, fontSize, fontFamily);
+  ctx.restore();
+}
+
+export function drawEventText(ctx: CanvasRenderingContext2D, card: ImageLayout['cards'][number], fontSize: number, fontFamily: string) {
+  const { x, y, width, height, colors, event, compact } = card;
+  ctx.save();
   const left = compact ? 8 : 11;
   const textWidth = width - left - 8;
   if (textWidth <= 0) { ctx.restore(); return; }

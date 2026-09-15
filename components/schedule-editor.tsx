@@ -9,16 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { DAYS, DAY_CODES, STEP, STORAGE_KEY, timeLabel, hoursLabel, layoutDay, validateEvent, overlaps, clamp, snap, moveEvent, resizeEvent, visiblePart, isFullyVisible, gridTicks, type ScheduleEvent, type Category, type GridSettings, type ScheduleCategory } from '@/lib/schedule';
-import { createProject, decodeProject, encodeProject, PROJECT_STORAGE_KEY, LEGACY_PROJECT_STORAGE_KEY, MAX_PROJECT_BYTES, applyProjectSettings, expandGridToEvents, type ProjectDocument, type GridLayout } from '@/lib/project';
+import { createProject, decodeProject, encodeProject, PROJECT_STORAGE_KEY, LEGACY_PROJECT_STORAGE_KEY, OLDER_PROJECT_STORAGE_KEY, MAX_PROJECT_BYTES, applyProjectSettings, expandGridToEvents, type ProjectDocument, type GridLayout } from '@/lib/project';
 import { registerScheduleTools } from '@/lib/schedule-tools';
 import { ProjectSettings } from '@/components/project-settings';
 import { TimeSelect } from '@/components/time-select';
 import { eventColors } from '@/lib/event-colors';
 import { createSchedulePng } from '@/lib/schedule-image';
+import { WallpaperEditor } from '@/components/wallpaper-editor';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 function loadInitialSchedule() {
   try {
-    const raw = localStorage.getItem(PROJECT_STORAGE_KEY) ?? localStorage.getItem(LEGACY_PROJECT_STORAGE_KEY) ?? localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(PROJECT_STORAGE_KEY) ?? localStorage.getItem(LEGACY_PROJECT_STORAGE_KEY) ?? localStorage.getItem(OLDER_PROJECT_STORAGE_KEY) ?? localStorage.getItem(STORAGE_KEY);
     return { project: raw === null ? createProject() : decodeProject(raw), error: '' };
   } catch {
     return { project: createProject(), error: '無法讀取儲存的行程，暫時顯示範例。原資料尚未覆寫；下次修改將儲存目前的週表。' };
@@ -29,6 +31,7 @@ type Gesture = { type: 'create' | 'move' | 'resize'; source: ScheduleEvent; init
 
 export function ScheduleEditor() {
   const [initial] = useState(loadInitialSchedule);
+  const [view, setView] = useState('grid');
   const [project, setProject] = useState<ProjectDocument>(initial.project);
   const events = project.events;
   const categories = project.categories;
@@ -106,7 +109,7 @@ export function ScheduleEditor() {
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-      setFileMessage({ text: '已準備下載週表與排版設定。不含表單中尚未儲存的編輯。', error: false });
+      setFileMessage({ text: '已準備下載週表、排版與玻璃設定。底圖需另外保留；不含尚未儲存的表單編輯。', error: false });
     } catch (error) { setFileMessage({ text: error instanceof Error ? error.message : '無法匯出 JSON。', error: true }); }
   }
   async function exportImage() {
@@ -229,9 +232,12 @@ export function ScheduleEditor() {
       <output className={`save-state ${storageError ? 'has-error' : ''}`}>{storageError ? <AlertCircle size={14} /> : <Check size={14} />}{saveState}</output>
     </header>
     <main className="workspace">
-      <section className="page-heading"><div><p className="eyebrow">YOUR WEEK, AT A GLANCE</p><h1>每週行程</h1><p className="page-description">在空白時段拖曳，開始安排一週。</p></div><div className="project-actions"><input type="file" accept=".json,application/json" ref={fileInput} hidden aria-label="選擇 Glance JSON 專案" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) void importProject(file); }}/><Button variant="outline" className="secondary-button" disabled={importing} onClick={() => fileInput.current?.click()}><Upload />{importing ? '讀取中…' : '匯入 JSON'}</Button><Button variant="outline" className="secondary-button" onClick={exportProject}><Download />匯出 JSON</Button><Button variant="outline" className="secondary-button" disabled={exportingImage} onClick={() => void exportImage()} title="匯出目前顯示範圍的白底週表（PNG）"><ImageDown />{exportingImage ? '匯出中…' : '匯出 PNG'}</Button><Button className="primary-button" disabled={!ready} onClick={() => openEditor(makeEvent(), true)}><Plus />新增行程</Button></div></section>
+      <section className="page-heading"><div><p className="eyebrow">YOUR WEEK, AT A GLANCE</p><h1>{view === 'grid' ? '每週行程' : '桌布設計'}</h1><p className="page-description">{view === 'grid' ? '在空白時段拖曳，開始安排一週。' : '把這週的安排，疊在你喜歡的照片上。'}</p></div><div className="project-actions"><input type="file" accept=".json,application/json" ref={fileInput} hidden aria-label="選擇 Glance JSON 專案" onChange={event => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; if (file) void importProject(file); }}/><Button variant="outline" className="secondary-button" disabled={importing} onClick={() => fileInput.current?.click()}><Upload />{importing ? '讀取中…' : '匯入 JSON'}</Button><Button variant="outline" className="secondary-button" onClick={exportProject}><Download />匯出 JSON</Button>{view === 'grid' && <><Button variant="outline" className="secondary-button" disabled={exportingImage} onClick={() => void exportImage()} title="匯出目前顯示範圍的白底週表（PNG）"><ImageDown />{exportingImage ? '匯出中…' : '匯出白底週表'}</Button><Button className="primary-button" disabled={!ready} onClick={() => openEditor(makeEvent(), true)}><Plus />新增行程</Button></>}</div></section>
       {storageError && <div className="storage-warning" role="alert"><AlertCircle size={18}/>{storageError}</div>}
       {fileMessage && (fileMessage.error ? <div className="storage-warning" role="alert">{fileMessage.text}</div> : <output className="file-status">{fileMessage.text}</output>)}
+      <Tabs value={view} onValueChange={value => { setView(value === 'wallpaper' ? 'wallpaper' : 'grid'); cancelGesture(); }} className="editor-tabs">
+      <TabsList aria-label="編輯模式"><TabsTrigger value="grid">編輯週表</TabsTrigger><TabsTrigger value="wallpaper">桌布設計</TabsTrigger></TabsList>
+      <TabsContent value="grid" keepMounted>
       <div className="editor-layout">
         <section className="schedule-card" aria-label="每週行程表">
           <div className="grid-toolbar"><span><strong>{scheduleGrid.days.map(day => DAYS[day]).join('、')}</strong><span className="toolbar-divider">/</span>{timeLabel(rangeStart)}–{timeLabel(rangeEnd)}</span><div className="grid-tools"><Button variant="ghost" onClick={() => setSettingsOpen(true)}><Settings2/>週表設定</Button><span className="grid-step-label">15 分鐘一格</span></div></div>
@@ -277,6 +283,9 @@ export function ScheduleEditor() {
         </aside>
       </div>
       <p className="interaction-hint">拖曳空白格新增 · 拖動行程換時間 · 拖動底部把手調整長度 · Esc 取消拖曳 · ⌘Z / Ctrl+Z 復原<span className="mobile-hint">手機可左右滑動週表，點選行程後在下方編輯。</span></p>
+      </TabsContent>
+      <TabsContent value="wallpaper" keepMounted><WallpaperEditor project={project} onChange={wallpaper => commitProject({ ...projectRef.current, wallpaper })}/></TabsContent>
+      </Tabs>
     </main>
     {settingsOpen && <ProjectSettings project={project} onClose={() => setSettingsOpen(false)} onApply={(nextCategories, nextGrid, reassignments) => {
       const next = applyProjectSettings(projectRef.current, nextCategories, nextGrid, reassignments);
@@ -285,7 +294,7 @@ export function ScheduleEditor() {
       setSettingsOpen(false);
       cancelGesture();
     }}/>}
-    <AlertDialog open={pendingImport !== null} onOpenChange={open => { if (!open) setPendingImport(null); }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>匯入專案？</AlertDialogTitle><AlertDialogDescription>「{pendingImport?.filename}」包含 {pendingImport?.project.events.length ?? 0} 個行程及排版設定。匯入會取代目前週表與尚未儲存的編輯；目前已儲存的週表可用 ⌘Z／Ctrl+Z 恢復。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction onClick={() => { if (!pendingImport) return; commitProject(pendingImport.project); setPendingImport(null); setDraft(null); setSelectedId(null); cancelGesture(); setFileMessage({ text: '已匯入週表與排版設定。', error: false }); }}>匯入並取代</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
+    <AlertDialog open={pendingImport !== null} onOpenChange={open => { if (!open) setPendingImport(null); }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>匯入專案？</AlertDialogTitle><AlertDialogDescription>「{pendingImport?.filename}」包含 {pendingImport?.project.events.length ?? 0} 個行程及排版設定。底圖保留目前選擇的照片。匯入會取代目前週表與尚未儲存的編輯；目前已儲存的週表可用 ⌘Z／Ctrl+Z 恢復。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction onClick={() => { if (!pendingImport) return; commitProject(pendingImport.project); setPendingImport(null); setDraft(null); setSelectedId(null); cancelGesture(); setFileMessage({ text: '已匯入週表與排版設定。', error: false }); }}>匯入並取代</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>;
 }
 

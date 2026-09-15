@@ -15,7 +15,7 @@ test('JSON round-trip preserves schedule and every layout setting', () => {
 test('old v1 backups migrate to the current project with default layout', () => {
   const old = JSON.stringify({ version: 1, events: SAMPLE_EVENTS });
   const restored = decodeProject(old);
-  assert.equal(restored.version, 3);
+  assert.equal(restored.version, 4);
   assert.equal(restored.format, 'glance');
   assert.deepEqual(restored.events, SAMPLE_EVENTS);
   assert.deepEqual(restored.layout, DEFAULT_LAYOUT);
@@ -36,7 +36,7 @@ test('incompatible or malformed projects are rejected without mutating current d
   const before = structuredClone(current);
   const invalid = [
     '{', '[]', '{}',
-    JSON.stringify({ ...current, version: 4 }),
+    JSON.stringify({ ...current, version: 5 }),
     JSON.stringify({ ...current, format: 'different-app' }),
     JSON.stringify({ ...current, layout: null }),
     JSON.stringify({ ...current, layout: { ...current.layout, fontSize: 100 } }),

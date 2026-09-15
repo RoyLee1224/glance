@@ -19,7 +19,7 @@ test('v2 layout survives migration while default categories and range are added'
   const project = createProject();
   const old = { format: 'glance', version: 2, events: project.events, layout: { hourHeight: 96, dayWidth: 180, fontSize: 18 } };
   const restored = decodeProject(JSON.stringify(old));
-  assert.equal(restored.version, 3);
+  assert.equal(restored.version, 4);
   assert.deepEqual(restored.layout, old.layout);
   assert.deepEqual(restored.categories, CATEGORIES);
   assert.deepEqual(restored.grid, DEFAULT_GRID);
